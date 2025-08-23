@@ -11,6 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 env.read_env(os.path.join(BASE_DIR, ".env"))
 
+STAGE = env.str("STAGE", "develop")
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env.str("SECRET_KEY")
 
@@ -261,17 +263,8 @@ RECAPTCHA_PRIVATE_KEY = env.str(
     "RECAPTCHA_PRIVATE_KEY", "6LdlOWYpAAAAAP2nediVlYsjEXrFZpzH4DZlUarQ"
 )
 
-# EMAIL
-EMAIL_BACKEND = env.str("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-EMAIL_HOST = env.str("EMAIL_HOST", "smtp.mail.ru")
-EMAIL_PORT = env.int("EMAIL_PORT", 465)
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", "dummy")
-EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", "dummy")
-EMAIL_TIMEOUT = 20
-
 # SMS
-SMS_URL = "https://portal.inhub.uz:8443/mutolaa"
+SMS_URL = "https://portal.inhub.uz:8443/kelajakmediklari"
 ESKIZ_SMS_LOGIN_URL = "https://notify.eskiz.uz/api/auth/login"
 ESKIZ_SMS_SEND_URL = "https://notify.eskiz.uz/api/message/sms/send"
 ESKIZ_SMS_LOGIN = env.str("ESKIZ_SMS_LOGIN", "login")

@@ -22,18 +22,18 @@ def generate_cache_key(type_, *args):
 
 
 class MessageProvider:
-    default_message = "Sizning tasdiqlash kodingiz: {}\n7xM/WB+KLn2"
+    default_message = "Sizning tasdiqlash kodingiz: {}\n9kR#mN$pL2x"
     auth_code_message = (
-        "Pudrat ilovasiga kirishni tasdiqlash uchun kod: {}\n7xM/WB+KLn2"
+        "Kelajak mediklari ilovasiga kirishni tasdiqlash uchun kod: {}\n9kR#mN$pL2x"
     )
-    change_phone_message = "Pudrat ilovasida telefon raqamingizni o'zgartirishni tasdiqlash uchun kod: {}\n7xM/WB+KLn2"
+    change_phone_message = "Kelajak mediklari ilovasida telefon raqamingizni o'zgartirishni tasdiqlash uchun kod: {}\n9kR#mN$pL2x"
 
     forget_pass_message = (
-        "Pudrat ilovasida parolingizni tiklash uchun kod: {}\n7xM/WB+KLn2"
+        "Kelajak mediklari ilovasida parolingizni tiklash uchun kod: {}\n9kR#mN$pL2x"
     )
     static_code = "7777"
     test_phone = "+998999999999"
-    delete_user_message = "Pudrat ilovasidagi sahifangizni o'chirishni tasdiqlash uchun kod: {}\nShuni yodda tuting: Sahifangiz o'chirilsa uni tiklash imkoni mavjud emas!"  # noqa
+    delete_user_message = "Kelajak mediklari ilovasidagi sahifangizni o'chirishni tasdiqlash uchun kod: {}\nShuni yodda tuting: Sahifangiz o'chirilsa uni tiklash imkoni mavjud emas!"  # noqa
 
     def __init__(self, _type):
         """
