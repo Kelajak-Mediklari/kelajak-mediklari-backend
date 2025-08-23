@@ -7,14 +7,12 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils.crypto import get_random_string
 
-from apps.common.tasks import send_email
 from apps.common.utils import eskiz_send_sms
 
 
 class CacheTypes:
     forget_pass_sms_code = "forget_pass_sms_code"
     change_phone_sms_code = "change_phone_sms_code"
-    change_email_sms_code = "change_email_sms_code"
     auth_sms_code = "auth_sms_code"
     delete_user_sms_code = "delete_user_sms_code"
 
@@ -29,7 +27,7 @@ class MessageProvider:
         "Pudrat ilovasiga kirishni tasdiqlash uchun kod: {}\n7xM/WB+KLn2"
     )
     change_phone_message = "Pudrat ilovasida telefon raqamingizni o'zgartirishni tasdiqlash uchun kod: {}\n7xM/WB+KLn2"
-    change_email_message = "Pudrat ilovasida elektron pochtangizni o'zgartirishni tasdiqlash uchun kod: {}\n7xM/WB+KLn2"  # noqa
+
     forget_pass_message = (
         "Pudrat ilovasida parolingizni tiklash uchun kod: {}\n7xM/WB+KLn2"
     )
@@ -59,8 +57,6 @@ class MessageProvider:
             message = self.auth_code_message
         elif self.type == CacheTypes.change_phone_sms_code:
             message = self.change_phone_message
-        elif self.type == CacheTypes.change_email_sms_code:
-            message = self.change_email_message
         elif self.type == CacheTypes.forget_pass_sms_code:
             message = self.forget_pass_message
         else:
@@ -79,20 +75,4 @@ class MessageProvider:
 
         await sync_to_async(cache.set)(
             generate_cache_key(self.type, phone, self.session), code, timeout=120
-        )
-
-    async def send_email(self, email, html_template):
-        code = self.generate_code()
-        if self.production_mode:
-            await sync_to_async(send_email.apply_async)(
-                kwargs={
-                    "subject": "Tingla",
-                    "template_name": html_template,
-                    "context": {"code": code},
-                    "receivers": [email],
-                }
-            )
-
-        await sync_to_async(cache.set)(
-            generate_cache_key(self.type, email, self.session), code, timeout=120
         )

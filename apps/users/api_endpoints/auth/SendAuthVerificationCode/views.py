@@ -25,15 +25,11 @@ class SendAuthVerificationCodeView(APIView):
         """`phone` format E164 as like `+998945552233`"""
         serializer = self.serializer_class(data=request.data)
         await sync_to_async(serializer.is_valid)(raise_exception=True)
-        phone = serializer.validated_data.get("phone", None)
-        email = serializer.validated_data.get("email", None)
+        phone = serializer.validated_data.get("phone")
 
         # We'll use a rate limiting approach
-        # Set a counter in the cache for this phone or email
-        if phone:
-            rate_limit_key = f"rate_limit:{CacheTypes.auth_sms_code}:{str(phone)}"
-        else:
-            rate_limit_key = f"rate_limit:{CacheTypes.auth_sms_code}:{str(email)}"
+        # Set a counter in the cache for this phone
+        rate_limit_key = f"rate_limit:{CacheTypes.auth_sms_code}:{str(phone)}"
 
         # Get current counter value
         counter = await sync_to_async(cache.get)(rate_limit_key) or 0
@@ -53,11 +49,7 @@ class SendAuthVerificationCodeView(APIView):
         await sync_to_async(cache.set)(rate_limit_key, counter + 1, timeout=120)
 
         message_provider = MessageProvider(CacheTypes.auth_sms_code)
-
-        if phone:
-            await message_provider.send_sms(str(phone))
-        else:
-            await message_provider.send_email(str(email), "email/auth_sms_code.html")
+        await message_provider.send_sms(str(phone))
 
         return Response({"session": message_provider.session})
 
