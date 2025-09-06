@@ -1,3 +1,10 @@
 from django.contrib import admin
 
-# Register your models here.
+from apps.course.models import Subject
+
+
+@admin.register(Subject)
+class SubjectAdmin(admin.ModelAdmin):
+    list_display = ("title", "slug", "is_active")
+    search_fields = ("title", "slug")
+    list_filter = ("is_active",)
