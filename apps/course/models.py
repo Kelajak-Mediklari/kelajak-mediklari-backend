@@ -3,7 +3,19 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from apps.common.models import BaseModel
-from apps.course.choices import LessonPartType, TestType, QuestionType
+from apps.course.choices import LessonPartType, QuestionType, TestType
+
+
+class Roadmap(BaseModel):
+    image = models.ImageField(_("Image"), upload_to="roadmaps/", null=True, blank=True)
+    is_active = models.BooleanField(_("Is Active"), default=True)
+
+    def __str__(self):
+        return self.image.name
+
+    class Meta:
+        verbose_name = _("Roadmap")
+        verbose_name_plural = _("Roadmaps")
 
 
 class Gallery(BaseModel):
@@ -108,7 +120,7 @@ class Test(BaseModel):
 
     def __str__(self):
         return self.title
-    
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
@@ -138,10 +150,14 @@ class LessonPart(BaseModel):
 
     # Video related
     video_url = models.URLField(_("Video URL"), null=True, blank=True)
-    
+
     # Test related
     test = models.ForeignKey(
-        "course.Test", on_delete=models.CASCADE, related_name="lesson_parts", null=True, blank=True
+        "course.Test",
+        on_delete=models.CASCADE,
+        related_name="lesson_parts",
+        null=True,
+        blank=True,
     )
 
     is_active = models.BooleanField(_("Is Active"), default=True)
@@ -195,9 +211,9 @@ class MatchingQuestion(BaseModel):
         "course.Question", on_delete=models.CASCADE, related_name="matching_question"
     )
     instructions = models.TextField(
-        _("Instructions"), 
+        _("Instructions"),
         default="Match the items on the left with the correct items on the right.",
-        blank=True
+        blank=True,
     )
 
     def __str__(self):
@@ -231,11 +247,14 @@ class BookTestQuestion(BaseModel):
         "course.Question", on_delete=models.CASCADE, related_name="book_test_question"
     )
     book_page = models.IntegerField(_("Book Page"), help_text="Page number in the book")
-    question_number = models.IntegerField(_("Question Number"), help_text="Question number on the page")
+    question_number = models.IntegerField(
+        _("Question Number"), help_text="Question number on the page"
+    )
     expected_answer = models.TextField(
-        _("Expected Answer"), 
+        _("Expected Answer"),
         help_text="Expected answer for reference (optional)",
-        null=True, blank=True
+        null=True,
+        blank=True,
     )
 
     def __str__(self):
@@ -250,10 +269,15 @@ class BookTestQuestion(BaseModel):
 # Regular Test Questions (with multiple choice options)
 class RegularTestQuestion(BaseModel):
     question = models.OneToOneField(
-        "course.Question", on_delete=models.CASCADE, related_name="regular_test_question"
+        "course.Question",
+        on_delete=models.CASCADE,
+        related_name="regular_test_question",
     )
     question_type = models.CharField(
-        _("Question Type"), max_length=50, choices=QuestionType.choices, default=QuestionType.TEXT_CHOICE
+        _("Question Type"),
+        max_length=50,
+        choices=QuestionType.choices,
+        default=QuestionType.TEXT_CHOICE,
     )
     # For video questions
     video_url = models.URLField(_("Video URL"), null=True, blank=True)
@@ -286,7 +310,11 @@ class AnswerChoice(BaseModel):
     order = models.IntegerField(_("Order"), default=1)
 
     def __str__(self):
-        choice_display = self.choice_text if self.choice_text else f"Image: {self.choice_image.name if self.choice_image else 'No image'}"
+        choice_display = (
+            self.choice_text
+            if self.choice_text
+            else f"Image: {self.choice_image.name if self.choice_image else 'No image'}"
+        )
         return f"{self.choice_label}: {choice_display[:30]}..."
 
     class Meta:
@@ -294,5 +322,3 @@ class AnswerChoice(BaseModel):
         verbose_name_plural = _("Answer Choices")
         ordering = ["order"]
         unique_together = ["regular_question", "choice_label"]
-
-

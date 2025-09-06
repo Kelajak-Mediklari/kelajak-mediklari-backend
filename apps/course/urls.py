@@ -7,4 +7,5 @@ app_name = "course"
 urlpatterns = [
     path("subjects/", course.SubjectListAPIView.as_view(), name="subjects"),
     path("list/", course.CourseListAPIView.as_view(), name="courses"),
+    path("roadmap/", course.RoadmapAPIView.as_view(), name="roadmap"),
 ]

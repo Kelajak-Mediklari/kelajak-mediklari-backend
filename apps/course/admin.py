@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from apps.course.models import Course, Subject
+from apps.course.models import Course, Roadmap, Subject
+
+
+@admin.register(Roadmap)
+class RoadmapAdmin(admin.ModelAdmin):
+    list_display = ("id", "image", "is_active")
+    list_filter = ("is_active",)
 
 
 @admin.register(Subject)
