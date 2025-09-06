@@ -6,6 +6,7 @@ from apps.course.serializers import SubjectSerializer
 
 class CourseListSerializer(serializers.ModelSerializer):
     subject = SubjectSerializer()
+    lessons_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -19,4 +20,8 @@ class CourseListSerializer(serializers.ModelSerializer):
             "learning_outcomes",
             "duration",
             "is_main_course",
+            "lessons_count",
         )
+
+    def get_lessons_count(self, obj):
+        return obj.lessons.filter(is_active=True).count()

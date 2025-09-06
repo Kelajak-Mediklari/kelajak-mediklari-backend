@@ -7,7 +7,11 @@ from apps.course.models import Course
 
 
 class CourseListAPIView(generics.ListAPIView):
-    queryset = Course.objects.filter(is_active=True).select_related("subject")
+    queryset = (
+        Course.objects.filter(is_active=True)
+        .select_related("subject")
+        .prefetch_related("lessons")
+    )
     serializer_class = CourseListSerializer
     permission_classes = (AllowAny,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
