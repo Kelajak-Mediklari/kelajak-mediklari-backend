@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from apps.course.models import Course, Roadmap, Subject
+from apps.course.models import Course, Lesson, Roadmap, Subject
 
 
 @admin.register(Roadmap)
@@ -21,3 +21,10 @@ class CourseAdmin(admin.ModelAdmin):
     list_display = ("title", "slug", "is_active")
     search_fields = ("title", "slug")
     list_filter = ("is_active", "is_unlimited", "is_main_course", "subject")
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ("title", "slug", "is_active")
+    search_fields = ("title", "slug")
+    list_filter = ("is_active", "course")
