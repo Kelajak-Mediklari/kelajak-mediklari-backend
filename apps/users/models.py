@@ -80,7 +80,7 @@ class User(AbstractUser, BaseModel):
 
                 # Ensure we don't exceed max_length even with random numbers
                 if len(username) > 150:
-                    username = f"{base_username[:140-4]}{random_suffix}"
+                    username = f"{base_username[:140 - 4]}{random_suffix}"
 
                 if not cls.objects.filter(username=username).exists():
                     break
@@ -89,7 +89,7 @@ class User(AbstractUser, BaseModel):
             # Use timestamp for guaranteed uniqueness
             if cls.objects.filter(username=username).exists():
                 timestamp = int(time.time())
-                username = f"{base_username[:140-10]}{timestamp}"
+                username = f"{base_username[:140 - 10]}{timestamp}"
 
         return username
 

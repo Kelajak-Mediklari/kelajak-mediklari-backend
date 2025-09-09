@@ -64,6 +64,7 @@ async def get_eskiz_token():
                 },
                 code="error",
             )
+
     if response.status_code == 200:
         token = response.json()["data"]["token"]
         cache.set("eskiz_auth_token", token, timeout=3600)
@@ -89,6 +90,8 @@ async def eskiz_send_sms(phone, message):
                 headers=headers,
                 timeout=5,
             )
+            print(phone[1:])
+            print(client)
         except ConnectTimeout:
             raise ValidationError(
                 detail={"sms_provider": _("Can not connect to sms provider.")},
