@@ -36,6 +36,7 @@ CUSTOM_APPS = [
     "apps.common",
     "apps.users",
     "apps.course",
+    "apps.payment",
 ]
 
 THIRD_PARTY_APPS = [
@@ -45,6 +46,8 @@ THIRD_PARTY_APPS = [
     "modeltranslation",
     "captcha",
     "nplusone.ext.django",
+    "click_up",
+    "payme"
 ]
 
 REST_FRAMEWORK = {
@@ -268,3 +271,20 @@ ESKIZ_SMS_LOGIN_URL = "https://notify.eskiz.uz/api/auth/login"
 ESKIZ_SMS_SEND_URL = "https://notify.eskiz.uz/api/message/sms/send"
 ESKIZ_SMS_LOGIN = env.str("ESKIZ_SMS_LOGIN", "login")
 ESKIZ_SMS_SECRET_KEY = env.str("ESKIZ_SMS_SECRET_KEY", "key")
+
+# PAYMENT CONFIGURATION
+
+# click
+CLICK_SERVICE_ID = env.str("CLICK_SERVICE_ID", "82038")
+CLICK_MERCHANT_ID = env.str("CLICK_MERCHANT_ID", "27907")
+CLICK_SECRET_KEY = env.str("CLICK_SECRET_KEY", "I5KHmhPUb0znvY5")
+CLICK_ACCOUNT_MODEL = "apps.payment.models.Transaction"
+CLICK_AMOUNT_FIELD = "amount"
+
+# payme
+PAYME_ID = env.str("PAYME_ID", "68398a78dfc9ac047367f843")
+PAYME_KEY = env.str("PAYME_KEY", "2XJ8nmdVZ6p5g33U16rWzbiqDw&%BbeJmp?C")
+PAYME_ACCOUNT_FIELD = "order_id"
+PAYME_AMOUNT_FIELD = "amount"
+PAYME_ACCOUNT_MODEL = "apps.payment.models.Transaction"
+PAYME_ONE_TIME_PAYMENT = True
