@@ -4,8 +4,8 @@ from apps.course.models import Lesson
 
 
 class LessonsListSerializer(serializers.ModelSerializer):
-    course_title = serializers.CharField(source="course.title", read_only=True)
-    parts_count = serializers.SerializerMethodField()
+    # parts_count is now provided by the queryset annotation
+    parts_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Lesson
@@ -13,9 +13,5 @@ class LessonsListSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "slug",
-            "course_title",
             "parts_count",
         )
-
-    def get_parts_count(self, obj):
-        return obj.parts.filter(is_active=True).count()

@@ -1,3 +1,4 @@
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
@@ -19,10 +20,9 @@ class LessonsListAPIView(generics.ListAPIView):
         course_id = self.kwargs.get(self.lookup_field)
         course = get_object_or_404(Course, id=course_id, is_active=True)
 
-        return (
-            Lesson.objects.filter(course=course, is_active=True)
-            .select_related("course", "course__subject")
-            .prefetch_related("parts")
+        # Use annotation to count active parts at the database level
+        return Lesson.objects.filter(course=course, is_active=True).annotate(
+            parts_count=Count("parts", filter=Q(parts__is_active=True))
         )
 
 
