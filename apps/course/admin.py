@@ -8,6 +8,7 @@ from apps.course.models import (
     LessonPart,
     Roadmap,
     Subject,
+    Test,
 )
 
 
@@ -59,3 +60,10 @@ class LessonPartAdmin(admin.ModelAdmin):
     list_display = ("title", "lesson", "type", "is_active")
     search_fields = ("title",)
     list_filter = ("is_active", "lesson", "type")
+
+
+@admin.register(Test)
+class TestAdmin(admin.ModelAdmin):
+    list_display = ("title", "slug", "is_active")
+    search_fields = ("title", "slug")
+    list_filter = ("is_active", "type")
