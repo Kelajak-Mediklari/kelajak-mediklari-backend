@@ -24,3 +24,4 @@ click-pkg==0.15
 django-tinymce==3.7.1
 django-celery-beat==2.8.1
 requests==2.31.0
+django-ckeditor
