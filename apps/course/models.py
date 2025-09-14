@@ -189,6 +189,15 @@ class Question(BaseModel):
     # True/False question field
     correct_answer = models.BooleanField(_("Correct Answer"), null=True, blank=True)
 
+    # Book test questions field - JSON array of all questions and answers
+    book_questions = models.JSONField(
+        _("Book Questions"),
+        null=True,
+        blank=True,
+        default=list,
+        help_text="JSON array of book test questions with their answers. Example: [{'expected_answer': 'A', 'question_number': 1}]",
+    )
+
     is_active = models.BooleanField(_("Is Active"), default=True)
 
     def __str__(self):
@@ -219,31 +228,6 @@ class MatchingPair(BaseModel):
         verbose_name = _("Matching Pair")
         verbose_name_plural = _("Matching Pairs")
         ordering = ["order"]
-
-
-# Book Test Questions
-class BookTestQuestion(BaseModel):
-    question = models.OneToOneField(
-        "course.Question", on_delete=models.CASCADE, related_name="book_test_question"
-    )
-    book_page = models.IntegerField(_("Book Page"), help_text="Page number in the book")
-    question_number = models.IntegerField(
-        _("Question Number"), help_text="Question number on the page"
-    )
-    expected_answer = models.TextField(
-        _("Expected Answer"),
-        help_text="Expected answer for reference (optional)",
-        null=True,
-        blank=True,
-    )
-
-    def __str__(self):
-        return f"Book Test Page {self.book_page} Q{self.question_number}: {self.question.question_text[:50]}..."
-
-    class Meta:
-        verbose_name = _("Book Test Question")
-        verbose_name_plural = _("Book Test Questions")
-        ordering = ["book_page", "question_number"]
 
 
 # Regular Test Questions (with multiple choice options)

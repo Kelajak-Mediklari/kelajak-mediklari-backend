@@ -5,7 +5,6 @@ from rest_framework import serializers
 
 from apps.course.models import (
     AnswerChoice,
-    BookTestQuestion,
     MatchingPair,
     Question,
     RegularTestQuestion,
@@ -59,18 +58,7 @@ class MatchingRightItemSerializer(serializers.ModelSerializer):
         return getattr(obj, "_shuffled_position", 1)
 
 
-# True/False questions now use the Question model directly
-
-
-class BookTestQuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BookTestQuestion
-        fields = (
-            "id",
-            "book_page",
-            "question_number",
-            "expected_answer",
-        )
+# True/False and Book Test questions now use the Question model directly
 
 
 class RegularTestQuestionSerializer(serializers.ModelSerializer):
@@ -90,7 +78,6 @@ class RegularTestQuestionSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     matching_left_items = serializers.SerializerMethodField()
     matching_right_items = serializers.SerializerMethodField()
-    book_test_question = BookTestQuestionSerializer(read_only=True)
     regular_test_question = RegularTestQuestionSerializer(read_only=True)
 
     class Meta:
@@ -101,9 +88,9 @@ class QuestionSerializer(serializers.ModelSerializer):
             "instructions",
             "order",
             "correct_answer",  # For true/false questions
+            "book_questions",  # For book test questions - JSON array
             "matching_left_items",
             "matching_right_items",
-            "book_test_question",
             "regular_test_question",
         )
 
@@ -139,17 +126,19 @@ class QuestionSerializer(serializers.ModelSerializer):
             fields_to_remove = []
 
             if test_type == "true_false":
-                # For true/false questions, remove order, instructions, and correct_answer
-                fields_to_remove.extend(["order", "instructions", "correct_answer"])
+                # For true/false questions, remove order, instructions, correct_answer, and book_questions
+                fields_to_remove.extend(
+                    ["order", "instructions", "correct_answer", "book_questions"]
+                )
+            elif test_type == "book_test":
+                # For book test questions, remove correct_answer and book_questions fields
+                fields_to_remove.extend(["correct_answer", "book_questions"])
             else:
-                # For all other test types, remove correct_answer field
-                fields_to_remove.append("correct_answer")
+                # For all other test types, remove correct_answer and book_questions fields
+                fields_to_remove.extend(["correct_answer", "book_questions"])
 
             if test_type != "matching":
                 fields_to_remove.extend(["matching_left_items", "matching_right_items"])
-
-            if test_type != "book_test":
-                fields_to_remove.append("book_test_question")
 
             if test_type != "regular_test":
                 fields_to_remove.append("regular_test_question")
@@ -196,11 +185,9 @@ class TestDetailSerializer(serializers.ModelSerializer):
                 .order_by("order")
             )
         elif obj.type == "book_test":
-            questions_queryset = (
-                Question.objects.filter(test=obj, is_active=True)
-                .select_related("book_test_question")
-                .order_by("order")
-            )
+            questions_queryset = Question.objects.filter(
+                test=obj, is_active=True
+            ).order_by("order")
         elif obj.type == "regular_test":
             questions_queryset = (
                 Question.objects.filter(test=obj, is_active=True)
