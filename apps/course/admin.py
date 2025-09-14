@@ -6,6 +6,7 @@ from apps.course.models import (
     Gallery,
     Lesson,
     LessonPart,
+    Question,
     Roadmap,
     Subject,
     Test,
@@ -67,3 +68,10 @@ class TestAdmin(admin.ModelAdmin):
     list_display = ("title", "slug", "is_active")
     search_fields = ("title", "slug")
     list_filter = ("is_active", "type")
+
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ("question_text", "test", "is_active")
+    search_fields = ("question_text",)
+    list_filter = ("is_active", "test")

@@ -185,7 +185,6 @@ class Question(BaseModel):
         null=True,
     )
     order = models.IntegerField(_("Order"), default=1)
-    points = models.IntegerField(_("Points"), default=1)
     is_active = models.BooleanField(_("Is Active"), default=True)
 
     def __str__(self):
