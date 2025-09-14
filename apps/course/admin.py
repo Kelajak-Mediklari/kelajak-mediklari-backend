@@ -6,6 +6,7 @@ from apps.course.models import (
     Gallery,
     Lesson,
     LessonPart,
+    MatchingPair,
     Question,
     Roadmap,
     Subject,
@@ -75,3 +76,10 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = ("question_text", "test", "is_active")
     search_fields = ("question_text",)
     list_filter = ("is_active", "test")
+
+
+@admin.register(MatchingPair)
+class MatchingPairAdmin(admin.ModelAdmin):
+    list_display = ("left_item", "right_item", "question", "order")
+    search_fields = ("left_item", "right_item", "question")
+    list_filter = ("question", "order")

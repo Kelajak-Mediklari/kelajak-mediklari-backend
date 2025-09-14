@@ -24,5 +24,10 @@ urlpatterns = [
         course.LessonPartDetailAPIView.as_view(),
         name="lesson-part-detail",
     ),
+    path(
+        "tests/<int:id>/",
+        course.TestDetailAPIView.as_view(),
+        name="test-detail",
+    ),
     path("roadmap/", course.RoadmapAPIView.as_view(), name="roadmap"),
 ]

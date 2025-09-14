@@ -4,3 +4,4 @@ from .LessonPartList.views import *  # noqa
 from .LessonsList.views import *  # noqa
 from .Roadmap.views import *  # noqa
 from .SubjectList.views import *  # noqa
+from .TestDetail.views import *  # noqa
