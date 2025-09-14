@@ -55,6 +55,8 @@ THIRD_PARTY_APPS = [
     "click_up",
     "payme",
     "tinymce",
+    "ckeditor",
+    "ckeditor_uploader",
 ]
 
 REST_FRAMEWORK = {
@@ -289,8 +291,8 @@ CLICK_ACCOUNT_MODEL = "apps.payment.models.Transaction"
 CLICK_AMOUNT_FIELD = "amount"
 
 # payme
-PAYME_ID = env.str("PAYME_ID", "68398a78dfc9ac047367f843")
-PAYME_KEY = env.str("PAYME_KEY", "2XJ8nmdVZ6p5g33U16rWzbiqDw&%BbeJmp?C")
+PAYME_ID = env.str("PAYME_ID", "")
+PAYME_KEY = env.str("PAYME_KEY", "")
 PAYME_ACCOUNT_FIELD = "order_id"
 PAYME_AMOUNT_FIELD = "amount"
 PAYME_ACCOUNT_MODEL = "apps.payment.models.Transaction"
@@ -332,4 +334,14 @@ TINYMCE_DEFAULT_CONFIG = {
         Times New Roman=times new roman,times,serif;
         Verdana=verdana,geneva,sans-serif;
     """,
+}
+
+
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_CONFIGS = {
+    "default": {
+        "toolbar": "full",
+        "height": 360,
+        "width": "auto",
+    },
 }

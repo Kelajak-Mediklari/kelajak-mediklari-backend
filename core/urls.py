@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.forms import AuthenticationForm
 from django.urls import include, path
-
+from ckeditor_uploader import urls as ckeditor_urls
 from .schema import swagger_urlpatterns
 
 
@@ -19,8 +19,8 @@ class LoginForm(AuthenticationForm):
         return super().clean()
 
 
-# admin.site.login_form = LoginForm
-# admin.site.login_template = "login.html"
+admin.site.login_form = LoginForm
+admin.site.login_template = "login.html"
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
@@ -28,6 +28,8 @@ urlpatterns = [
     path("api/v1/users/", include("apps.users.urls", namespace="users")),
     path("api/v1/course/", include("apps.course.urls", namespace="course")),
     path("api/v1/payment/", include("apps.payment.urls")),
+    path("ckeditor/", include("ckeditor_uploader.urls")),
+    path("ckeditor/upload/", include(ckeditor_urls)),
 ]
 
 urlpatterns += i18n_patterns(

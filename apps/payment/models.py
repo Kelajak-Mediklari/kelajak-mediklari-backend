@@ -61,11 +61,12 @@ class Transaction(BaseModel):
     def payment_url(self):
         payment_url = ""
         if self.provider == PaymentProvider.PAYME:
-            payme.initializer.generate_pay_link(
+            payment_url = payme.initializer.generate_pay_link(
                 id=self.id,
                 amount=self.amount,
                 return_url=f"https://kelajakmediklari.uz/",
             )
+            print(payment_url)
         elif self.provider == PaymentProvider.CLICK:
             payment_url = click_up.initializer.generate_pay_link(
                 id=self.id,
