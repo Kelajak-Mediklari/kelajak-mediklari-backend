@@ -1,4 +1,5 @@
 from .CourseList.views import *  # noqa
+from .LessonPartDetail.views import *  # noqa
 from .LessonPartList.views import *  # noqa
 from .LessonsList.views import *  # noqa
 from .Roadmap.views import *  # noqa

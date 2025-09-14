@@ -21,7 +21,6 @@ class LessonPartListAPIView(generics.ListAPIView):
 
         return (
             LessonPart.objects.filter(lesson=lesson, is_active=True)
-            .select_related("test")
             .prefetch_related("galleries", "attached_files")
             .order_by("order")
         )

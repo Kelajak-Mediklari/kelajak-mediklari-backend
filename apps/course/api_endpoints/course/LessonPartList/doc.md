@@ -32,12 +32,10 @@ Retrieves a paginated list of all active lesson parts for a specific lesson. The
     {
       "id": 1,
       "title": "Introduction Video",
-      "description": "Learn the basics of the topic",
       "type": "video",
       "order": 1,
       "award_coin": 10,
       "award_point": 5,
-      "video_url": "https://example.com/video.mp4",
       "test_id": 2,
       "galleries": [
         {
@@ -55,12 +53,10 @@ Retrieves a paginated list of all active lesson parts for a specific lesson. The
     {
       "id": 2,
       "title": "Theory Section",
-      "description": "Read the theoretical background",
       "type": "theory",
       "order": 2,
       "award_coin": 15,
       "award_point": 8,
-      "video_url": null,
       "test_id": null,
       "galleries": [],
       "attached_files": []
@@ -90,12 +86,10 @@ Retrieves a paginated list of all active lesson parts for a specific lesson. The
 ### LessonPart Fields
 - `id`: Unique identifier for the lesson part
 - `title`: Title of the lesson part
-- `description`: Detailed description of the lesson part content
 - `type`: Type of lesson part (video, theory, matching, true_false, book_test, regular_test, assignment)
 - `order`: Display order of the lesson part within the lesson
 - `award_coin`: Number of coins awarded upon completion
 - `award_point`: Number of points awarded upon completion
-- `video_url`: URL to the video content (null if not a video type)
 - `test_id`: ID of associated test (null if no test is associated)
 - `galleries`: Array of associated gallery images
 - `attached_files`: Array of associated files
