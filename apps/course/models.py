@@ -198,6 +198,20 @@ class Question(BaseModel):
         help_text="JSON array of book test questions with their answers. Example: [{'expected_answer': 'A', 'question_number': 1}]",
     )
 
+    # Regular test question fields
+    regular_question_type = models.CharField(
+        _("Regular Question Type"),
+        max_length=50,
+        choices=QuestionType.choices,
+        null=True,
+        blank=True,
+        default=QuestionType.TEXT_CHOICE,
+    )
+    video_url = models.URLField(_("Video URL"), null=True, blank=True)
+    question_image = models.ImageField(
+        _("Question Image"), upload_to="questions/images/", null=True, blank=True
+    )
+
     is_active = models.BooleanField(_("Is Active"), default=True)
 
     def __str__(self):
@@ -230,38 +244,14 @@ class MatchingPair(BaseModel):
         ordering = ["order"]
 
 
-# Regular Test Questions (with multiple choice options)
-class RegularTestQuestion(BaseModel):
-    question = models.OneToOneField(
-        "course.Question",
-        on_delete=models.CASCADE,
-        related_name="regular_test_question",
-    )
-    question_type = models.CharField(
-        _("Question Type"),
-        max_length=50,
-        choices=QuestionType.choices,
-        default=QuestionType.TEXT_CHOICE,
-    )
-    # For video questions
-    video_url = models.URLField(_("Video URL"), null=True, blank=True)
-    # For questions with additional media
-    question_image = models.ImageField(
-        _("Question Image"), upload_to="questions/images/", null=True, blank=True
-    )
-
-    def __str__(self):
-        return f"Regular: {self.question.question_text[:50]}..."
-
-    class Meta:
-        verbose_name = _("Regular Test Question")
-        verbose_name_plural = _("Regular Test Questions")
-
-
 # Answer choices for Regular Test Questions
 class AnswerChoice(BaseModel):
-    regular_question = models.ForeignKey(
-        "course.RegularTestQuestion", on_delete=models.CASCADE, related_name="choices"
+    question = models.ForeignKey(
+        "course.Question",
+        on_delete=models.CASCADE,
+        related_name="choices",
+        null=True,
+        blank=True,
     )
     choice_text = models.TextField(_("Choice Text"), null=True, blank=True)
     choice_image = models.ImageField(
@@ -285,4 +275,4 @@ class AnswerChoice(BaseModel):
         verbose_name = _("Answer Choice")
         verbose_name_plural = _("Answer Choices")
         ordering = ["order"]
-        unique_together = ["regular_question", "choice_label"]
+        unique_together = ["question", "choice_label"]

@@ -3,13 +3,7 @@ import random
 from django.db.models import Prefetch
 from rest_framework import serializers
 
-from apps.course.models import (
-    AnswerChoice,
-    MatchingPair,
-    Question,
-    RegularTestQuestion,
-    Test,
-)
+from apps.course.models import AnswerChoice, MatchingPair, Question, Test
 
 
 class AnswerChoiceSerializer(serializers.ModelSerializer):
@@ -58,27 +52,13 @@ class MatchingRightItemSerializer(serializers.ModelSerializer):
         return getattr(obj, "_shuffled_position", 1)
 
 
-# True/False and Book Test questions now use the Question model directly
-
-
-class RegularTestQuestionSerializer(serializers.ModelSerializer):
-    choices = AnswerChoiceSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = RegularTestQuestion
-        fields = (
-            "id",
-            "question_type",
-            "video_url",
-            "question_image",
-            "choices",
-        )
+# True/False, Book Test, and Regular Test questions now use the Question model directly
 
 
 class QuestionSerializer(serializers.ModelSerializer):
     matching_left_items = serializers.SerializerMethodField()
     matching_right_items = serializers.SerializerMethodField()
-    regular_test_question = RegularTestQuestionSerializer(read_only=True)
+    choices = AnswerChoiceSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
@@ -89,9 +69,12 @@ class QuestionSerializer(serializers.ModelSerializer):
             "order",
             "correct_answer",  # For true/false questions
             "book_questions",  # For book test questions - JSON array
+            "regular_question_type",  # For regular test questions
+            "video_url",  # For regular test questions
+            "question_image",  # For regular test questions
+            "choices",  # For regular test questions
             "matching_left_items",
             "matching_right_items",
-            "regular_test_question",
         )
 
     def get_matching_left_items(self, obj):
@@ -126,22 +109,49 @@ class QuestionSerializer(serializers.ModelSerializer):
             fields_to_remove = []
 
             if test_type == "true_false":
-                # For true/false questions, remove order, instructions, correct_answer, and book_questions
+                # For true/false questions, remove all other fields
                 fields_to_remove.extend(
-                    ["order", "instructions", "correct_answer", "book_questions"]
+                    [
+                        "order",
+                        "instructions",
+                        "correct_answer",
+                        "book_questions",
+                        "regular_question_type",
+                        "video_url",
+                        "question_image",
+                        "choices",
+                    ]
                 )
             elif test_type == "book_test":
-                # For book test questions, remove correct_answer and book_questions fields
+                # For book test questions, remove other type-specific fields
+                fields_to_remove.extend(
+                    [
+                        "correct_answer",
+                        "book_questions",
+                        "regular_question_type",
+                        "video_url",
+                        "question_image",
+                        "choices",
+                    ]
+                )
+            elif test_type == "regular_test":
+                # For regular test questions, remove other type-specific fields
                 fields_to_remove.extend(["correct_answer", "book_questions"])
             else:
-                # For all other test types, remove correct_answer and book_questions fields
-                fields_to_remove.extend(["correct_answer", "book_questions"])
+                # For all other test types, remove all type-specific fields
+                fields_to_remove.extend(
+                    [
+                        "correct_answer",
+                        "book_questions",
+                        "regular_question_type",
+                        "video_url",
+                        "question_image",
+                        "choices",
+                    ]
+                )
 
             if test_type != "matching":
                 fields_to_remove.extend(["matching_left_items", "matching_right_items"])
-
-            if test_type != "regular_test":
-                fields_to_remove.append("regular_test_question")
 
             # Remove the fields from the serializer
             for field_name in fields_to_remove:
@@ -191,10 +201,9 @@ class TestDetailSerializer(serializers.ModelSerializer):
         elif obj.type == "regular_test":
             questions_queryset = (
                 Question.objects.filter(test=obj, is_active=True)
-                .select_related("regular_test_question")
                 .prefetch_related(
                     Prefetch(
-                        "regular_test_question__choices",
+                        "choices",
                         queryset=AnswerChoice.objects.order_by("order"),
                     )
                 )

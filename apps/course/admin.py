@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from apps.course.models import (
+    AnswerChoice,
     Course,
     File,
     Gallery,
@@ -82,4 +83,11 @@ class QuestionAdmin(admin.ModelAdmin):
 class MatchingPairAdmin(admin.ModelAdmin):
     list_display = ("left_item", "right_item", "question", "order")
     search_fields = ("left_item", "right_item", "question")
+    list_filter = ("question", "order")
+
+
+@admin.register(AnswerChoice)
+class AnswerChoiceAdmin(admin.ModelAdmin):
+    list_display = ("choice_text", "choice_label", "question", "order")
+    search_fields = ("choice_text", "choice_label", "question")
     list_filter = ("question", "order")
