@@ -23,3 +23,4 @@ apps/course/api_endpoints/course/CategoryList/
 ├── views.py
 └── tests.py
 ```
+# test
