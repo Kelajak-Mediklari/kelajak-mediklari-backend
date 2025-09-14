@@ -178,6 +178,12 @@ class Question(BaseModel):
         "course.Test", on_delete=models.CASCADE, related_name="questions"
     )
     question_text = models.TextField(_("Question Text"))
+    instructions = models.TextField(
+        _("Instructions"),
+        help_text="Special instructions for matching questions or other question types",
+        blank=True,
+        null=True,
+    )
     order = models.IntegerField(_("Order"), default=1)
     points = models.IntegerField(_("Points"), default=1)
     is_active = models.BooleanField(_("Is Active"), default=True)
@@ -206,28 +212,13 @@ class TrueFalseQuestion(BaseModel):
         verbose_name_plural = _("True False Questions")
 
 
-# Matching Questions
-class MatchingQuestion(BaseModel):
-    question = models.OneToOneField(
-        "course.Question", on_delete=models.CASCADE, related_name="matching_question"
-    )
-    instructions = models.TextField(
-        _("Instructions"),
-        default="Match the items on the left with the correct items on the right.",
-        blank=True,
-    )
-
-    def __str__(self):
-        return f"Matching: {self.question.question_text[:50]}..."
-
-    class Meta:
-        verbose_name = _("Matching Question")
-        verbose_name_plural = _("Matching Questions")
-
-
 class MatchingPair(BaseModel):
-    matching_question = models.ForeignKey(
-        "course.MatchingQuestion", on_delete=models.CASCADE, related_name="pairs"
+    question = models.ForeignKey(
+        "course.Question",
+        on_delete=models.CASCADE,
+        related_name="matching_pairs",
+        null=True,
+        blank=True,
     )
     left_item = models.TextField(_("Left Item"))  # Question side
     right_item = models.TextField(_("Right Item"))  # Answer side
