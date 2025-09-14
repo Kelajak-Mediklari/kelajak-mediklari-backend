@@ -19,3 +19,5 @@ pillow==11.2.1
 djangorestframework-simplejwt==5.2.2
 httpx==0.27.0
 adrf==0.1.9
+payme-pkg==3.0.27
+click-pkg==0.15
