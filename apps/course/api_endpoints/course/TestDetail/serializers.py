@@ -10,7 +10,6 @@ from apps.course.models import (
     Question,
     RegularTestQuestion,
     Test,
-    TrueFalseQuestion,
 )
 
 
@@ -60,10 +59,7 @@ class MatchingRightItemSerializer(serializers.ModelSerializer):
         return getattr(obj, "_shuffled_position", 1)
 
 
-class TrueFalseQuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TrueFalseQuestion
-        fields = ("id",)
+# True/False questions now use the Question model directly
 
 
 class BookTestQuestionSerializer(serializers.ModelSerializer):
@@ -92,7 +88,6 @@ class RegularTestQuestionSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    true_false_question = TrueFalseQuestionSerializer(read_only=True)
     matching_left_items = serializers.SerializerMethodField()
     matching_right_items = serializers.SerializerMethodField()
     book_test_question = BookTestQuestionSerializer(read_only=True)
@@ -105,7 +100,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             "question_text",
             "instructions",
             "order",
-            "true_false_question",
+            "correct_answer",  # For true/false questions
             "matching_left_items",
             "matching_right_items",
             "book_test_question",
@@ -143,8 +138,12 @@ class QuestionSerializer(serializers.ModelSerializer):
             # Remove fields based on test type
             fields_to_remove = []
 
-            if test_type != "true_false":
-                fields_to_remove.append("true_false_question")
+            if test_type == "true_false":
+                # For true/false questions, remove order, instructions, and correct_answer
+                fields_to_remove.extend(["order", "instructions", "correct_answer"])
+            else:
+                # For all other test types, remove correct_answer field
+                fields_to_remove.append("correct_answer")
 
             if test_type != "matching":
                 fields_to_remove.extend(["matching_left_items", "matching_right_items"])
@@ -182,11 +181,9 @@ class TestDetailSerializer(serializers.ModelSerializer):
 
         # Get optimized queryset based on test type to avoid N+1 queries
         if obj.type == "true_false":
-            questions_queryset = (
-                Question.objects.filter(test=obj, is_active=True)
-                .select_related("true_false_question")
-                .order_by("order")
-            )
+            questions_queryset = Question.objects.filter(
+                test=obj, is_active=True
+            ).order_by("order")
         elif obj.type == "matching":
             questions_queryset = (
                 Question.objects.filter(test=obj, is_active=True)

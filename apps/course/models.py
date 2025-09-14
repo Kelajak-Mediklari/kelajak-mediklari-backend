@@ -185,6 +185,10 @@ class Question(BaseModel):
         null=True,
     )
     order = models.IntegerField(_("Order"), default=1)
+
+    # True/False question field
+    correct_answer = models.BooleanField(_("Correct Answer"), null=True, blank=True)
+
     is_active = models.BooleanField(_("Is Active"), default=True)
 
     def __str__(self):
@@ -194,21 +198,6 @@ class Question(BaseModel):
         verbose_name = _("Question")
         verbose_name_plural = _("Questions")
         ordering = ["order"]
-
-
-# True/False Questions
-class TrueFalseQuestion(BaseModel):
-    question = models.OneToOneField(
-        "course.Question", on_delete=models.CASCADE, related_name="true_false_question"
-    )
-    correct_answer = models.BooleanField(_("Correct Answer"))
-
-    def __str__(self):
-        return f"True/False: {self.question.question_text[:50]}..."
-
-    class Meta:
-        verbose_name = _("True False Question")
-        verbose_name_plural = _("True False Questions")
 
 
 class MatchingPair(BaseModel):
