@@ -14,5 +14,10 @@ urlpatterns = [
     path(
         "<int:course_id>/lessons/", course.LessonsListAPIView.as_view(), name="lessons"
     ),
+    path(
+        "lessons/<int:lesson_id>/parts/",
+        course.LessonPartListAPIView.as_view(),
+        name="lesson-parts",
+    ),
     path("roadmap/", course.RoadmapAPIView.as_view(), name="roadmap"),
 ]
