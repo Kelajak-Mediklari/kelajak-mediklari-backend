@@ -41,13 +41,20 @@ CUSTOM_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework.authtoken",
     "drf_yasg",
     "corsheaders",
     "modeltranslation",
+    "django_celery_beat",
     "captcha",
     "nplusone.ext.django",
+    "phonenumber_field",
+    "adrf",
+    "django_filters",
     "click_up",
-    "payme"
+    "payme",
+    "tinymce",
 ]
 
 REST_FRAMEWORK = {
