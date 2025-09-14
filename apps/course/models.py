@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from tinymce.models import HTMLField
 
 from apps.common.models import BaseModel
 from apps.course.choices import LessonPartType, QuestionType, TestType
@@ -136,7 +137,7 @@ class LessonPart(BaseModel):
         "course.Lesson", on_delete=models.CASCADE, related_name="parts"
     )
     title = models.CharField(_("Title"), max_length=255)
-    description = models.TextField(_("Description"), null=True, blank=True)
+    content = HTMLField(null=True, blank=True)
     type = models.CharField(_("Type"), max_length=255, choices=LessonPartType.choices)
     order = models.IntegerField(_("Order"), default=1)
     award_coin = models.IntegerField(_("Award Coin"), default=0)

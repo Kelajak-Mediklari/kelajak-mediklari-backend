@@ -13,7 +13,7 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
-            "description",
+            "content",
             "type",
             "video_url",
             "test",

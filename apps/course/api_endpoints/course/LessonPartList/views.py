@@ -12,7 +12,7 @@ class LessonPartListAPIView(generics.ListAPIView):
     serializer_class = LessonPartListSerializer
     permission_classes = (IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
-    search_fields = ("title", "description")
+    search_fields = ("title",)
     lookup_field = "lesson_id"
 
     def get_queryset(self):
