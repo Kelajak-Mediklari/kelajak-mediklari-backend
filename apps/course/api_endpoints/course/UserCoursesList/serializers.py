@@ -19,8 +19,6 @@ class UserCoursesListSerializer(serializers.ModelSerializer):
             "is_completed",
             "start_date",
             "finish_date",
-            "coins_earned",
-            "points_earned",
             "completed_lessons_count",
         )
 
