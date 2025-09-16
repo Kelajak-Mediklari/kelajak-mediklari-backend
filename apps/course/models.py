@@ -1,10 +1,15 @@
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from tinymce.models import HTMLField
 
 from apps.common.models import BaseModel
 from apps.course.choices import LessonPartType, QuestionType, TestType
+
+User = get_user_model()
 
 
 class Roadmap(BaseModel):
@@ -276,3 +281,399 @@ class AnswerChoice(BaseModel):
         verbose_name_plural = _("Answer Choices")
         ordering = ["order"]
         unique_together = ["question", "choice_label"]
+
+
+# User Progress Tracking Models
+
+
+class UserCourse(BaseModel):
+    """Track user's progress in a specific course"""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="user_courses",
+        verbose_name=_("User"),
+    )
+    course = models.ForeignKey(
+        "course.Course",
+        on_delete=models.CASCADE,
+        related_name="user_courses",
+        verbose_name=_("Course"),
+    )
+    progress_percent = models.DecimalField(
+        _("Progress Percentage"),
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text=_("Progress percentage from 0.00 to 100.00"),
+    )
+    is_completed = models.BooleanField(_("Is Completed"), default=False)
+    start_date = models.DateTimeField(_("Start Date"), auto_now_add=True)
+    finish_date = models.DateTimeField(_("Finish Date"), null=True, blank=True)
+
+    # Additional tracking fields
+    coins_earned = models.IntegerField(_("Coins Earned"), default=0)
+    points_earned = models.IntegerField(_("Points Earned"), default=0)
+    last_accessed = models.DateTimeField(_("Last Accessed"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("User Course")
+        verbose_name_plural = _("User Courses")
+        unique_together = ["user", "course"]
+        ordering = ["-last_accessed"]
+
+    def __str__(self):
+        return f"{self.user} - {self.course.title} ({self.progress_percent}%)"
+
+    def clean(self):
+        """Validate progress percentage"""
+        if self.progress_percent < 0 or self.progress_percent > 100:
+            raise ValidationError(_("Progress percentage must be between 0 and 100"))
+
+    def update_progress(self):
+        """Calculate and update course progress based on completed lessons"""
+        total_lessons = self.course.lessons.filter(is_active=True).count()
+        if total_lessons == 0:
+            self.progress_percent = 0
+        else:
+            completed_lessons = self.user_lessons.filter(is_completed=True).count()
+            self.progress_percent = round((completed_lessons / total_lessons) * 100, 2)
+
+        # Mark course as completed if 100% progress
+        if self.progress_percent >= 100 and not self.is_completed:
+            self.is_completed = True
+            self.finish_date = timezone.now()
+
+        self.save()
+        return self.progress_percent
+
+    def get_next_lesson(self):
+        """Get the next uncompleted lesson in the course"""
+        completed_lesson_ids = self.user_lessons.filter(is_completed=True).values_list(
+            "lesson_id", flat=True
+        )
+
+        return (
+            self.course.lessons.filter(is_active=True)
+            .exclude(id__in=completed_lesson_ids)
+            .first()
+        )
+
+
+class UserLesson(BaseModel):
+    """Track user's progress in a specific lesson"""
+
+    user_course = models.ForeignKey(
+        "course.UserCourse",
+        on_delete=models.CASCADE,
+        related_name="user_lessons",
+        verbose_name=_("User Course"),
+    )
+    lesson = models.ForeignKey(
+        "course.Lesson",
+        on_delete=models.CASCADE,
+        related_name="user_lessons",
+        verbose_name=_("Lesson"),
+    )
+    is_completed = models.BooleanField(_("Is Completed"), default=False)
+    completion_date = models.DateTimeField(_("Completion Date"), null=True, blank=True)
+    start_date = models.DateTimeField(_("Start Date"), auto_now_add=True)
+
+    # Progress tracking
+    progress_percent = models.DecimalField(
+        _("Progress Percentage"), max_digits=5, decimal_places=2, default=0.00
+    )
+
+    class Meta:
+        verbose_name = _("User Lesson")
+        verbose_name_plural = _("User Lessons")
+        unique_together = ["user_course", "lesson"]
+        ordering = ["lesson__id"]
+
+    def __str__(self):
+        return f"{self.user_course.user} - {self.lesson.title}"
+
+    def clean(self):
+        """Validate that lesson belongs to the same course"""
+        if self.lesson.course != self.user_course.course:
+            raise ValidationError(
+                _("Lesson must belong to the same course as user course")
+            )
+
+    def update_progress(self):
+        """Calculate and update lesson progress based on completed parts"""
+        total_parts = self.lesson.parts.filter(is_active=True).count()
+        if total_parts == 0:
+            self.progress_percent = 100  # No parts means lesson is complete
+        else:
+            completed_parts = self.user_lesson_parts.filter(is_completed=True).count()
+            self.progress_percent = round((completed_parts / total_parts) * 100, 2)
+
+        # Mark lesson as completed if 100% progress
+        if self.progress_percent >= 100 and not self.is_completed:
+            self.is_completed = True
+            self.completion_date = timezone.now()
+
+            # Update course progress
+            self.user_course.update_progress()
+
+        self.save()
+        return self.progress_percent
+
+    def get_next_part(self):
+        """Get the next uncompleted lesson part"""
+        completed_part_ids = self.user_lesson_parts.filter(
+            is_completed=True
+        ).values_list("lesson_part_id", flat=True)
+
+        return (
+            self.lesson.parts.filter(is_active=True)
+            .exclude(id__in=completed_part_ids)
+            .order_by("order")
+            .first()
+        )
+
+
+class UserLessonPart(BaseModel):
+    """Track user's progress in a specific lesson part"""
+
+    user_lesson = models.ForeignKey(
+        "course.UserLesson",
+        on_delete=models.CASCADE,
+        related_name="user_lesson_parts",
+        verbose_name=_("User Lesson"),
+    )
+    lesson_part = models.ForeignKey(
+        "course.LessonPart",
+        on_delete=models.CASCADE,
+        related_name="user_lesson_parts",
+        verbose_name=_("Lesson Part"),
+    )
+    is_completed = models.BooleanField(_("Is Completed"), default=False)
+    completion_date = models.DateTimeField(_("Completion Date"), null=True, blank=True)
+    start_date = models.DateTimeField(_("Start Date"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("User Lesson Part")
+        verbose_name_plural = _("User Lesson Parts")
+        unique_together = ["user_lesson", "lesson_part"]
+        ordering = ["lesson_part__order"]
+
+    def __str__(self):
+        return f"{self.user_lesson.user_course.user} - {self.lesson_part.title}"
+
+    def clean(self):
+        """Validate that lesson part belongs to the same lesson"""
+        if self.lesson_part.lesson != self.user_lesson.lesson:
+            raise ValidationError(
+                _("Lesson part must belong to the same lesson as user lesson")
+            )
+
+    def mark_completed(self):
+        """Mark this lesson part as completed and update related progress"""
+        if not self.is_completed:
+            self.is_completed = True
+            self.completion_date = timezone.now()
+
+            # Award coins and points to user course
+            user_course = self.user_lesson.user_course
+            user_course.coins_earned += self.lesson_part.award_coin
+            user_course.points_earned += self.lesson_part.award_point
+            user_course.save()
+
+            self.save()
+
+            # Update lesson progress
+            self.user_lesson.update_progress()
+
+
+class UserTest(BaseModel):
+    """Track user's test attempts and results"""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="user_tests",
+        verbose_name=_("User"),
+    )
+    test = models.ForeignKey(
+        "course.Test",
+        on_delete=models.CASCADE,
+        related_name="user_tests",
+        verbose_name=_("Test"),
+    )
+    start_date = models.DateTimeField(_("Start Date"), auto_now_add=True)
+    finish_date = models.DateTimeField(_("Finish Date"), null=True, blank=True)
+    is_passed = models.BooleanField(_("Is Passed"), default=False)
+
+    # Score tracking
+    total_questions = models.IntegerField(_("Total Questions"), default=0)
+    correct_answers = models.IntegerField(_("Correct Answers"), default=0)
+
+    # Test attempt tracking
+    attempt_number = models.IntegerField(_("Attempt Number"), default=1)
+
+    # Status tracking
+    is_submitted = models.BooleanField(_("Is Submitted"), default=False)
+    is_in_progress = models.BooleanField(_("Is In Progress"), default=True)
+
+    class Meta:
+        verbose_name = _("User Test")
+        verbose_name_plural = _("User Tests")
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return f"{self.user} - {self.test.title} - Attempt {self.attempt_number}"
+
+    def calculate_score(self):
+        """Calculate test score based on user answers"""
+        if self.total_questions == 0:
+            score_percent = 0
+        else:
+            score_percent = round(
+                (self.correct_answers / self.total_questions) * 100, 2
+            )
+
+        # Determine if test is passed (assuming 70% is passing)
+        self.is_passed = score_percent >= 70
+
+        self.save()
+        return score_percent
+
+    def submit_test(self):
+        """Submit the test and calculate final results"""
+        if not self.is_submitted:
+            self.is_submitted = True
+            self.is_in_progress = False
+            self.finish_date = timezone.now()
+
+            # Count correct answers
+            self.correct_answers = self.user_answers.filter(is_correct=True).count()
+            self.total_questions = self.user_answers.count()
+
+            # Calculate final score
+            self.calculate_score()
+
+            self.save()
+
+
+class UserAnswer(BaseModel):
+    """Track user's answers to test questions"""
+
+    user_test = models.ForeignKey(
+        "course.UserTest",
+        on_delete=models.CASCADE,
+        related_name="user_answers",
+        verbose_name=_("User Test"),
+    )
+    question = models.ForeignKey(
+        "course.Question",
+        on_delete=models.CASCADE,
+        related_name="user_answers",
+        verbose_name=_("Question"),
+    )
+
+    # Different answer types
+    selected_choice = models.ForeignKey(
+        "course.AnswerChoice",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_("Selected Choice"),
+        help_text=_("For multiple choice questions"),
+    )
+    boolean_answer = models.BooleanField(
+        _("Boolean Answer"),
+        null=True,
+        blank=True,
+        help_text=_("For true/false questions"),
+    )
+    text_answer = models.TextField(
+        _("Text Answer"), null=True, blank=True, help_text=_("For open-ended questions")
+    )
+
+    # For matching questions - JSON field to store matching pairs
+    matching_answer = models.JSONField(
+        _("Matching Answer"),
+        null=True,
+        blank=True,
+        help_text=_("JSON object storing matching pairs for matching questions"),
+    )
+
+    # For book test questions
+    book_answer = models.JSONField(
+        _("Book Answer"),
+        null=True,
+        blank=True,
+        help_text=_("JSON array of answers for book test questions"),
+    )
+
+    # Answer metadata
+    is_correct = models.BooleanField(_("Is Correct"), default=False)
+    answered_at = models.DateTimeField(_("Answered At"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("User Answer")
+        verbose_name_plural = _("User Answers")
+        unique_together = ["user_test", "question"]
+        ordering = ["question__order"]
+
+    def __str__(self):
+        return f"{self.user_test.user} - {self.question.question_text[:50]}..."
+
+    def clean(self):
+        """Validate that question belongs to the same test"""
+        if self.question.test != self.user_test.test:
+            raise ValidationError(
+                _("Question must belong to the same test as user test")
+            )
+
+    def save(self, *args, **kwargs):
+        """Auto-check correctness when saving"""
+        self.check_correctness()
+        super().save(*args, **kwargs)
+
+    def check_correctness(self):
+        """Check if the answer is correct based on question type"""
+        if self.question.test.type == TestType.TRUE_FALSE:
+            self.is_correct = self.boolean_answer == self.question.correct_answer
+
+        elif self.question.test.type == TestType.REGULAR_TEST:
+            if self.selected_choice:
+                self.is_correct = self.selected_choice.is_correct
+            else:
+                self.is_correct = False
+
+        elif self.question.test.type == TestType.MATCHING:
+            # For matching questions, check if all pairs are correctly matched
+            if self.matching_answer and self.question.matching_pairs.exists():
+                correct_pairs = {
+                    pair.left_item: pair.right_item
+                    for pair in self.question.matching_pairs.all()
+                }
+                self.is_correct = self.matching_answer == correct_pairs
+            else:
+                self.is_correct = False
+
+        elif self.question.test.type == TestType.BOOK_TEST:
+            # For book test, check against book_questions field
+            if self.book_answer and self.question.book_questions:
+                correct_count = 0
+                total_questions = len(self.question.book_questions)
+
+                for i, book_question in enumerate(self.question.book_questions):
+                    if i < len(self.book_answer):
+                        user_answer = self.book_answer[i]
+                        expected_answer = book_question.get("expected_answer")
+                        if user_answer == expected_answer:
+                            correct_count += 1
+
+                # Consider correct if at least 70% of book questions are correct
+                self.is_correct = (
+                    (correct_count / total_questions) >= 0.7
+                    if total_questions > 0
+                    else False
+                )
+            else:
+                self.is_correct = False
