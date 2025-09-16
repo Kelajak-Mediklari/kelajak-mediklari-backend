@@ -8,6 +8,7 @@ class UserCoursesListSerializer(serializers.ModelSerializer):
     """Serializer for UserCourse model in list view"""
 
     course = CourseSerializer()
+    completed_lessons_count = serializers.SerializerMethodField()
 
     class Meta:
         model = UserCourse
@@ -20,4 +21,9 @@ class UserCoursesListSerializer(serializers.ModelSerializer):
             "finish_date",
             "coins_earned",
             "points_earned",
+            "completed_lessons_count",
         )
+
+    def get_completed_lessons_count(self, obj):
+        """Get the count of completed lessons for this user course"""
+        return obj.user_lessons.filter(is_completed=True).count()

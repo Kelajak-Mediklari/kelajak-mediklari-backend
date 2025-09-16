@@ -130,19 +130,11 @@ class UserCourseAdmin(admin.ModelAdmin):
                 "fields": (
                     "progress_percent",
                     "is_completed",
-                    "start_date",
                     "finish_date",
                 )
             },
         ),
         ("Rewards", {"fields": ("coins_earned", "points_earned")}),
-        (
-            "Timestamps",
-            {
-                "fields": ("created_at", "updated_at"),
-                "classes": ("collapse",),
-            },
-        ),
     )
 
     def get_readonly_fields(self, request, obj=None):
@@ -228,7 +220,7 @@ class UserTestAdmin(admin.ModelAdmin):
         (
             "Timestamps",
             {
-                "fields": ("start_date", "finish_date", "created_at", "updated_at"),
+                "fields": ("finish_date",),
                 "classes": ("collapse",),
             },
         ),

@@ -29,7 +29,7 @@ class UserCoursesListAPIView(generics.ListAPIView):
         return (
             UserCourse.objects.filter(user=self.request.user)
             .select_related("course", "course__subject")
-            .prefetch_related("course__lessons")
+            .prefetch_related("course__lessons", "user_lessons")
         )
 
 
