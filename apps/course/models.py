@@ -315,13 +315,12 @@ class UserCourse(BaseModel):
     # Additional tracking fields
     coins_earned = models.IntegerField(_("Coins Earned"), default=0)
     points_earned = models.IntegerField(_("Points Earned"), default=0)
-    last_accessed = models.DateTimeField(_("Last Accessed"), auto_now=True)
 
     class Meta:
         verbose_name = _("User Course")
         verbose_name_plural = _("User Courses")
         unique_together = ["user", "course"]
-        ordering = ["-last_accessed"]
+        ordering = ["-start_date"]
 
     def __str__(self):
         return f"{self.user} - {self.course.title} ({self.progress_percent}%)"

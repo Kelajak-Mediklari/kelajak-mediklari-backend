@@ -119,7 +119,6 @@ class UserCourseAdmin(admin.ModelAdmin):
         "progress_percent",
         "coins_earned",
         "points_earned",
-        "last_accessed",
     )
     date_hierarchy = "start_date"
 
@@ -140,7 +139,7 @@ class UserCourseAdmin(admin.ModelAdmin):
         (
             "Timestamps",
             {
-                "fields": ("last_accessed", "created_at", "updated_at"),
+                "fields": ("created_at", "updated_at"),
                 "classes": ("collapse",),
             },
         ),
