@@ -28,7 +28,7 @@ class UserCoursesListAPIView(generics.ListAPIView):
     def get_queryset(self):
         return (
             UserCourse.objects.filter(user=self.request.user)
-            .select_related("course", "course__subject")
+            .select_related("course")
             .prefetch_related("course__lessons", "user_lessons")
         )
 
