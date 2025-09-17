@@ -345,3 +345,6 @@ CKEDITOR_CONFIGS = {
         "width": "auto",
     },
 }
+
+# Jazzmin admin branding
+from core.jazzmin_conf import JAZZMIN_SETTINGS, JAZZMIN_UI_TWEAKS  # noqa: E402,F401

@@ -1,0 +1,93 @@
+JAZZMIN_SETTINGS = {
+    "site_title": "Kelajak Mediklari Admin",
+    "site_header": "Kelajak Mediklari",
+    "site_brand": "Kelajak Mediklari",
+    "welcome_sign": "Kelajak Mediklari Admin",
+    # Paths are relative to STATICFILES storage
+    "site_logo": "km/logo.jpeg",
+    "login_logo": "km/login_logo.png",
+    "login_logo_dark": "km/login_logo.png",
+    "show_sidebar": True,
+    "navigation_expanded": False,
+    "show_ui_builder": False,
+    "show_templatetag_toolbar": False,
+    "show_toolbar": False,
+    "show_debug": False,
+    "show_theme_selector": False,
+    "show_language_selector": False,
+    # Order apps and models in the sidebar
+    "order_with_respect_to": [
+        # Apps
+        "common",
+        "users",
+        "course",
+        "payment",
+        # Models per app (app_label.ModelName) in desired order
+        "common.FrontendTranslation",
+        "common.UsefulLinkCategory",
+        "common.UsefulLinkFile",
+        "common.UsefulLinkSubject",
+        "common.UsefulLink",
+        "common.VersionHistory",
+        "users.User",
+        "users.UserDevice",
+        "course.Roadmap",
+        "course.Gallery",
+        "course.File",
+        "course.Subject",
+        "course.Course",
+        "course.Lesson",
+        "course.LessonPart",
+        "course.Test",
+        "course.Question",
+        "course.MatchingPair",
+        "course.AnswerChoice",
+        "course.UserCourse",
+        "course.UserLesson",
+        "course.UserLessonPart",
+        "course.UserTest",
+        "course.UserAnswer",
+        "payment.Transaction",
+    ],
+    # App and model icons
+    "icons": {
+        # Apps
+        "common": "fas fa-layer-group",
+        "users": "fas fa-users",
+        "course": "fas fa-graduation-cap",
+        "payment": "fas fa-credit-card",
+        # Common models
+        "common.frontendtranslation": "fas fa-language",
+        "common.usefullinkcategory": "fas fa-folder",
+        "common.usefullinkfile": "fas fa-file",
+        "common.usefullinksubject": "fas fa-tags",
+        "common.usefullink": "fas fa-link",
+        "common.versionhistory": "fas fa-history",
+        # Users models
+        "users.user": "fas fa-user",
+        "users.userdevice": "fas fa-mobile-alt",
+        # Course models
+        "course.roadmap": "fas fa-map",
+        "course.gallery": "far fa-images",
+        "course.file": "fas fa-file-alt",
+        "course.subject": "fas fa-bookmark",
+        "course.course": "fas fa-book",
+        "course.lesson": "fas fa-chalkboard-teacher",
+        "course.lessonpart": "fas fa-stream",
+        "course.test": "fas fa-tasks",
+        "course.question": "fas fa-question-circle",
+        "course.matchingpair": "fas fa-link",
+        "course.answerchoice": "fas fa-check-circle",
+        "course.usercourse": "fas fa-user-graduate",
+        "course.userlesson": "fas fa-book-reader",
+        "course.userlessonpart": "fas fa-puzzle-piece",
+        "course.usertest": "fas fa-poll",
+        "course.useranswer": "fas fa-comment-dots",
+        # Payment models
+        "payment.transaction": "fas fa-receipt",
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "light",
+}
