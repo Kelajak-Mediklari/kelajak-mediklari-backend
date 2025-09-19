@@ -29,6 +29,8 @@ JAZZMIN_SETTINGS = {
         "common.UsefulLinkSubject",
         "common.UsefulLink",
         "common.VersionHistory",
+        "common.Region",
+        "common.District",
         "users.User",
         "users.UserDevice",
         "course.Roadmap",
@@ -63,6 +65,8 @@ JAZZMIN_SETTINGS = {
         "common.usefullinksubject": "fas fa-tags",
         "common.usefullink": "fas fa-link",
         "common.versionhistory": "fas fa-history",
+        "common.region": "fas fa-map-marker-alt",
+        "common.district": "fas fa-map-pin",
         # Users models
         "users.user": "fas fa-user",
         "users.userdevice": "fas fa-mobile-alt",

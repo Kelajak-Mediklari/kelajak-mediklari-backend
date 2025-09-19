@@ -19,8 +19,8 @@ class LoginForm(AuthenticationForm):
         return super().clean()
 
 
-admin.site.login_form = LoginForm
-admin.site.login_template = "login.html"
+# admin.site.login_form = LoginForm
+# admin.site.login_template = "login.html"
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),

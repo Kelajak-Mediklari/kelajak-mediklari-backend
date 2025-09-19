@@ -89,3 +89,26 @@ class UsefulLink(BaseModel):
 
     def __str__(self):
         return self.title
+
+
+class Region(BaseModel):
+    name = models.CharField(_("Name"), max_length=255)
+
+    class Meta:
+        verbose_name = _("Region")
+        verbose_name_plural = _("Regions")
+
+    def __str__(self):
+        return self.name
+
+
+class District(BaseModel):
+    name = models.CharField(_("Name"), max_length=255)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="districts")
+
+    class Meta:
+        verbose_name = _("District")
+        verbose_name_plural = _("Districts")
+
+    def __str__(self):
+        return self.name
