@@ -37,4 +37,9 @@ urlpatterns = [
         course.UserLessonCreateAPIView.as_view(),
         name="user-lesson-create",
     ),
+    path(
+        "user-lesson-part/create/",
+        course.UserLessonPartCreateAPIView.as_view(),
+        name="user-lesson-part-create",
+    ),
 ]
