@@ -25,5 +25,11 @@ class LessonsListAPIView(generics.ListAPIView):
             parts_count=Count("parts", filter=Q(parts__is_active=True))
         )
 
+    def get_serializer_context(self):
+        """Add course_id to serializer context"""
+        context = super().get_serializer_context()
+        context["course_id"] = self.kwargs.get(self.lookup_field)
+        return context
+
 
 __all__ = ["LessonsListAPIView"]
