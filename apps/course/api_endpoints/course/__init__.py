@@ -6,3 +6,4 @@ from .Roadmap.views import *  # noqa
 from .SubjectList.views import *  # noqa
 from .TestDetail.views import *  # noqa
 from .UserCoursesList.views import *  # noqa
+from .UserLessonCreate.views import *  # noqa
