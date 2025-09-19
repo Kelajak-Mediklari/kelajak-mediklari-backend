@@ -10,11 +10,7 @@ class UserLessonCreateAPIView(APIView):
     """
     Create a new UserLesson for a user.
 
-    This endpoint allows authenticated users to start a lesson within a course
-    they have access to (i.e., courses they have paid for).
-
     Requirements:
-    - User must be authenticated
     - User must have a valid UserCourse (indicating they've paid for the course)
     - Lesson must exist and be active
     - Lesson must belong to the specified course
