@@ -27,7 +27,13 @@ class LessonsListAPIView(generics.ListAPIView):
 
         # Add user progress annotation if user is authenticated
         if self.request.user.is_authenticated:
-            from django.db.models import BooleanField, Case, DecimalField, When
+            from django.db.models import (
+                BooleanField,
+                Case,
+                DecimalField,
+                IntegerField,
+                When,
+            )
 
             queryset = queryset.annotate(
                 user_progress_percent=Case(
@@ -47,6 +53,15 @@ class LessonsListAPIView(generics.ListAPIView):
                     ),
                     default=False,
                     output_field=BooleanField(),
+                ),
+                user_lesson_id_annotation=Case(
+                    When(
+                        user_lessons__user_course__user=self.request.user,
+                        user_lessons__user_course__course_id=course_id,
+                        then="user_lessons__id",
+                    ),
+                    default=None,
+                    output_field=IntegerField(),
                 ),
             )
 

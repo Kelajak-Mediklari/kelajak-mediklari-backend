@@ -8,6 +8,7 @@ class LessonsListSerializer(serializers.ModelSerializer):
     parts_count = serializers.IntegerField(read_only=True)
     is_user_lesson_created = serializers.SerializerMethodField()
     progress_percent = serializers.SerializerMethodField()
+    user_lesson_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -17,6 +18,7 @@ class LessonsListSerializer(serializers.ModelSerializer):
             "slug",
             "parts_count",
             "is_user_lesson_created",
+            "user_lesson_id",
             "progress_percent",
         )
 
@@ -59,3 +61,24 @@ class LessonsListSerializer(serializers.ModelSerializer):
         ).first()
 
         return float(user_lesson.progress_percent) if user_lesson else 0.00
+
+    def get_user_lesson_id(self, obj):
+        """Get UserLesson ID if it exists for this lesson and the current user's course"""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+
+        # Use annotated field if available (from queryset optimization)
+        if hasattr(obj, "user_lesson_id_annotation"):
+            return obj.user_lesson_id_annotation
+
+        # Fallback for when annotation is not available
+        course_id = self.context.get("course_id")
+        if not course_id:
+            return None
+
+        user_lesson = UserLesson.objects.filter(
+            lesson=obj, user_course__user=request.user, user_course__course_id=course_id
+        ).first()
+
+        return user_lesson.id if user_lesson else None
