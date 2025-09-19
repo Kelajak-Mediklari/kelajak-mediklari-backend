@@ -29,6 +29,7 @@ class TransactionCreateAPIView(CreateAPIView):
             course=course,
             amount=serializer.validated_data['amount'],
             provider=serializer.validated_data['provider'],
+            duration=serializer.validated_data['duration'],
             status=TransactionStatus.PENDING
         )
 

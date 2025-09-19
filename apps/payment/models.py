@@ -34,6 +34,7 @@ class Transaction(BaseModel):
     amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_('amount'))
     provider = models.CharField(max_length=50, choices=PaymentProvider.choices, verbose_name=_('provider'),
                                 null=True, blank=True)
+    duration = models.IntegerField(_("duration in month"), null=True)
     paid_at = models.DateTimeField(verbose_name=_('paid at'), null=True, blank=True)
     canceled_at = models.DateTimeField(verbose_name=_('canceled at'), null=True, blank=True)
     status = models.CharField(max_length=20, choices=TransactionStatus.choices, verbose_name=_("status"))
@@ -48,14 +49,33 @@ class Transaction(BaseModel):
     def success_process(self):
         with db_transaction.atomic():
             self.paid_at = timezone.now()
-            self.save(update_fields=['paid_at'])
+            self.status = TransactionStatus.SUCCESS
+            self.save(update_fields=['paid_at', 'status'])
 
-            # TODO: create StudentCourse
+            # Create UserCourse with calculated finish_date
+            from apps.course.models import UserCourse
+            from django.utils import timezone as django_timezone
+            from datetime import timedelta
+
+            # Calculate finish_date based on duration in months
+            start_date = django_timezone.now()
+            finish_date = start_date + timedelta(days=self.duration * 30) if self.duration else None
+
+            # Create or update UserCourse
+            user_course, created = UserCourse.objects.update_or_create(
+                user=self.user,
+                course=self.course,
+                defaults={
+                    'start_date': start_date,
+                    'finish_date': finish_date,
+                }
+            )
 
     def cancel_process(self):
         with db_transaction.atomic():
             self.canceled_at = timezone.now()
-            self.save(update_fields=['canceled_at'])
+            self.status = TransactionStatus.CANCELED
+            self.save(update_fields=['canceled_at', 'status'])
 
     @property
     def payment_url(self):

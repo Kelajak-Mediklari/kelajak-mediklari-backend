@@ -9,10 +9,15 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         help_text="Payment provider type (Payme or Click)"
     )
     course_id = serializers.IntegerField(help_text="Course ID to purchase")
+    duration = serializers.IntegerField(
+        help_text="Duration in months",
+        min_value=1,
+        max_value=120
+    )
 
     class Meta:
         model = Transaction
-        fields = ['amount', 'provider_type', 'course_id']
+        fields = ['amount', 'provider_type', 'course_id', 'duration']
 
     def validate_amount(self, value):
         """Validate that amount is positive"""
