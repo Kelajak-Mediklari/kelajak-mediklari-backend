@@ -21,6 +21,8 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         fields = [
             "full_name",
             "avatar",
+            "username",
+            "email",
             "grade",
             "birth_date",
             "region",
@@ -32,7 +34,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             "current_password",
         ]
         extra_kwargs = {
-            "full_name": {"required": False}, 
+            "full_name": {"required": False},
             "avatar": {"required": False},
             "grade": {"required": False},
             "birth_date": {"required": False},
