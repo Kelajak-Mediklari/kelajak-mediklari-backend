@@ -8,6 +8,7 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
     galleries = GallerySerializer(many=True, read_only=True)
     attached_files = FileSerializer(many=True, read_only=True)
     is_user_lesson_part_completed = serializers.SerializerMethodField()
+    user_lesson_id = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonPart
@@ -21,6 +22,7 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
             "galleries",
             "attached_files",
             "is_user_lesson_part_completed",
+            "user_lesson_id",
         )
 
     def get_is_user_lesson_part_completed(self, obj):
@@ -35,3 +37,23 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
             user_lesson__user_course__user=request.user,
             is_completed=True,
         ).exists()
+
+    def get_user_lesson_id(self, obj):
+        """Get the user lesson ID if exists, otherwise return None"""
+        request = self.context.get("request")
+        if not request or not request.user or not request.user.is_authenticated:
+            return None
+
+        # Find the UserLesson for this lesson part and user
+        user_lesson_part = (
+            UserLessonPart.objects.select_related("user_lesson")
+            .filter(
+                lesson_part=obj,
+                user_lesson__user_course__user=request.user,
+            )
+            .first()
+        )
+
+        if user_lesson_part:
+            return user_lesson_part.user_lesson.id
+        return None
