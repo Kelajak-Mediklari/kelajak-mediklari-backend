@@ -68,6 +68,7 @@ class Transaction(BaseModel):
                 defaults={
                     'start_date': start_date,
                     'finish_date': finish_date,
+                    'is_expired': False,
                 }
             )
 
