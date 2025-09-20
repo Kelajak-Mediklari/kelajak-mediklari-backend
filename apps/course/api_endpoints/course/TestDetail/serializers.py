@@ -4,6 +4,7 @@ from django.db.models import Prefetch
 from rest_framework import serializers
 
 from apps.course.models import AnswerChoice, MatchingPair, Question, Test
+from apps.course.serializers import FileSerializer
 
 
 class AnswerChoiceSerializer(serializers.ModelSerializer):
@@ -160,6 +161,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class TestDetailSerializer(serializers.ModelSerializer):
     questions = serializers.SerializerMethodField()
+    attached_files = FileSerializer(many=True, read_only=True)
 
     class Meta:
         model = Test
@@ -170,6 +172,7 @@ class TestDetailSerializer(serializers.ModelSerializer):
             "type",
             "slug",
             "test_duration",
+            "attached_files",
             "questions",
         )
 

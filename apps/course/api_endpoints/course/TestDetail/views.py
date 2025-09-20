@@ -14,7 +14,7 @@ class TestDetailAPIView(generics.RetrieveAPIView):
     def get_object(self):
         test_id = self.kwargs.get(self.lookup_field)
         return get_object_or_404(
-            Test.objects.filter(is_active=True),
+            Test.objects.filter(is_active=True).prefetch_related("attached_files"),
             id=test_id,
         )
 

@@ -129,6 +129,9 @@ class Test(BaseModel):
     test_duration = models.IntegerField(
         _("Test Duration"), default=10, null=True, blank=True, help_text="in minutes"
     )
+    attached_files = models.ManyToManyField(
+        "course.File", related_name="tests", blank=True
+    )
     is_active = models.BooleanField(_("Is Active"), default=True)
 
     def __str__(self):
@@ -207,7 +210,7 @@ class Question(BaseModel):
         null=True,
         blank=True,
         default=list,
-        help_text="JSON array of book test questions with their answers. Example: [{'expected_answer': 'A', 'question_number': 1}]",
+        help_text="JSON array of book test questions with their answers. Example: [{'questions_count': 10, 'questions': [{'expected_answer': 'A', 'question_number': 1}, {'expected_answer': 'B', 'question_number': 2}]}]",
     )
 
     # Regular test question fields
@@ -666,21 +669,50 @@ class UserAnswer(BaseModel):
         elif self.question.test.type == TestType.BOOK_TEST:
             # For book test, check against book_questions field
             if self.book_answer and self.question.book_questions:
-                correct_count = 0
-                total_questions = len(self.question.book_questions)
+                # Handle new book_questions structure
+                if (
+                    isinstance(self.question.book_questions, list)
+                    and len(self.question.book_questions) > 0
+                ):
+                    # New structure: [{'questions_count': 10, 'questions': [...]}]
+                    book_data = self.question.book_questions[0]
+                    if isinstance(book_data, dict) and "questions" in book_data:
+                        questions_list = book_data["questions"]
+                        correct_count = 0
+                        total_questions = len(questions_list)
 
-                for i, book_question in enumerate(self.question.book_questions):
-                    if i < len(self.book_answer):
-                        user_answer = self.book_answer[i]
-                        expected_answer = book_question.get("expected_answer")
-                        if user_answer == expected_answer:
-                            correct_count += 1
+                        for i, book_question in enumerate(questions_list):
+                            if i < len(self.book_answer):
+                                user_answer = self.book_answer[i]
+                                expected_answer = book_question.get("expected_answer")
+                                if user_answer == expected_answer:
+                                    correct_count += 1
 
-                # Consider correct if at least 70% of book questions are correct
-                self.is_correct = (
-                    (correct_count / total_questions) >= 0.7
-                    if total_questions > 0
-                    else False
-                )
+                        # Consider correct if at least 70% of book questions are correct
+                        self.is_correct = (
+                            (correct_count / total_questions) >= 0.7
+                            if total_questions > 0
+                            else False
+                        )
+                    else:
+                        # Fallback for old structure: direct array of questions
+                        correct_count = 0
+                        total_questions = len(self.question.book_questions)
+
+                        for i, book_question in enumerate(self.question.book_questions):
+                            if i < len(self.book_answer):
+                                user_answer = self.book_answer[i]
+                                expected_answer = book_question.get("expected_answer")
+                                if user_answer == expected_answer:
+                                    correct_count += 1
+
+                        # Consider correct if at least 70% of book questions are correct
+                        self.is_correct = (
+                            (correct_count / total_questions) >= 0.7
+                            if total_questions > 0
+                            else False
+                        )
+                else:
+                    self.is_correct = False
             else:
                 self.is_correct = False
