@@ -14,6 +14,7 @@ class User(AbstractUser, BaseModel):
     class Gender(models.TextChoices):
         MALE = "MALE", _("Male")
         FEMALE = "FEMALE", _("Female")
+    
 
     full_name = models.CharField(
         verbose_name=_("Full name"), max_length=255, null=True, blank=True
