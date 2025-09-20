@@ -19,6 +19,7 @@ class UserCoursesListSerializer(serializers.ModelSerializer):
             "is_completed",
             "start_date",
             "finish_date",
+            "is_expired",
             "completed_lessons_count",
         )
 

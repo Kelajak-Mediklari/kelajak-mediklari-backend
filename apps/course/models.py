@@ -311,6 +311,7 @@ class UserCourse(BaseModel):
     is_completed = models.BooleanField(_("Is Completed"), default=False)
     start_date = models.DateTimeField(_("Start Date"), auto_now_add=True)
     finish_date = models.DateTimeField(_("Finish Date"), null=True, blank=True)
+    is_expired = models.BooleanField(_("Is Expired"), default=False)
 
     # Additional tracking fields
     coins_earned = models.IntegerField(_("Coins Earned"), default=0)
