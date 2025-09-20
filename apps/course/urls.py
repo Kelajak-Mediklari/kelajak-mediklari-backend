@@ -29,7 +29,11 @@ urlpatterns = [
         course.TestDetailAPIView.as_view(),
         name="test-detail",
     ),
-    path("roadmap/", course.RoadmapAPIView.as_view(), name="roadmap"),
+    path(
+        "subjects/<int:subject_id>/roadmap/",
+        course.RoadmapAPIView.as_view(),
+        name="roadmap",
+    ),
     # USER RELATED APIS
     path("user-courses/", course.UserCoursesListAPIView.as_view(), name="user-courses"),
     path(

@@ -12,18 +12,6 @@ from apps.course.choices import LessonPartType, QuestionType, TestType
 User = get_user_model()
 
 
-class Roadmap(BaseModel):
-    image = models.ImageField(_("Image"), upload_to="roadmaps/", null=True, blank=True)
-    is_active = models.BooleanField(_("Is Active"), default=True)
-
-    def __str__(self):
-        return self.image.name
-
-    class Meta:
-        verbose_name = _("Roadmap")
-        verbose_name_plural = _("Roadmaps")
-
-
 class Gallery(BaseModel):
     image = models.ImageField(_("Image"), upload_to="galleries/", null=True, blank=True)
 
@@ -63,6 +51,25 @@ class Subject(BaseModel):
 
     def __str__(self):
         return self.title
+
+
+class Roadmap(BaseModel):
+    image = models.ImageField(_("Image"), upload_to="roadmaps/", null=True, blank=True)
+    is_active = models.BooleanField(_("Is Active"), default=True)
+    subject = models.ForeignKey(
+        "course.Subject",
+        on_delete=models.CASCADE,
+        related_name="roadmaps",
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return self.subject.title
+
+    class Meta:
+        verbose_name = _("Roadmap")
+        verbose_name_plural = _("Roadmaps")
 
 
 class Course(BaseModel):
