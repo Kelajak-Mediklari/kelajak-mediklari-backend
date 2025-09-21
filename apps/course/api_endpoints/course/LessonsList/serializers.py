@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.course.models import Lesson, UserLesson
+from apps.course.models import Lesson, UserCourse, UserLesson
 
 
 class LessonsListSerializer(serializers.ModelSerializer):
@@ -86,22 +86,23 @@ class LessonsListSerializer(serializers.ModelSerializer):
         return user_lesson.id if user_lesson else None
 
     def get_user_course_id(self, obj):
-        """Get UserCourse ID if it exists for this lesson and the current user"""
+        """Get UserCourse ID if user has access to the course (regardless of UserLesson existence)"""
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return None
 
-        # Use prefetched data if available (from queryset optimization)
-        if hasattr(obj, "filtered_user_lessons") and obj.filtered_user_lessons:
-            return obj.filtered_user_lessons[0].user_course.id
+        # Get user_course from context (added in view)
+        user_course = self.context.get("user_course")
+        if user_course:
+            return user_course.id
 
-        # Fallback for when prefetch is not available
+        # Fallback for when context is not available
         course_id = self.context.get("course_id")
         if not course_id:
             return None
 
-        user_lesson = UserLesson.objects.filter(
-            lesson=obj, user_course__user=request.user, user_course__course_id=course_id
-        ).first()
-
-        return user_lesson.user_course.id if user_lesson else None
+        try:
+            user_course = UserCourse.objects.get(user=request.user, course_id=course_id)
+            return user_course.id
+        except UserCourse.DoesNotExist:
+            return None

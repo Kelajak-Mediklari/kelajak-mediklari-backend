@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.course.api_endpoints.course.LessonsList.serializers import (
     LessonsListSerializer,
 )
-from apps.course.models import Course, Lesson, UserLesson
+from apps.course.models import Course, Lesson, UserCourse, UserLesson
 
 
 class LessonsListAPIView(generics.ListAPIView):
@@ -40,9 +40,23 @@ class LessonsListAPIView(generics.ListAPIView):
         return queryset
 
     def get_serializer_context(self):
-        """Add course_id to serializer context"""
+        """Add course_id and user_course to serializer context"""
         context = super().get_serializer_context()
-        context["course_id"] = self.kwargs.get(self.lookup_field)
+        course_id = self.kwargs.get(self.lookup_field)
+        context["course_id"] = course_id
+
+        # Add user_course if user is authenticated and has access to the course
+        if self.request.user.is_authenticated:
+            try:
+                user_course = UserCourse.objects.get(
+                    user=self.request.user, course_id=course_id
+                )
+                context["user_course"] = user_course
+            except UserCourse.DoesNotExist:
+                context["user_course"] = None
+        else:
+            context["user_course"] = None
+
         return context
 
 
