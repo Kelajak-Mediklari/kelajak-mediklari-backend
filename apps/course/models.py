@@ -129,6 +129,11 @@ class Test(BaseModel):
     test_duration = models.IntegerField(
         _("Test Duration"), default=10, null=True, blank=True, help_text="in minutes"
     )
+    questions_count = models.IntegerField(
+        _("Questions Count"),
+        default=10,
+        help_text="Number of random questions to show to user",
+    )
     attached_files = models.ManyToManyField(
         "course.File", related_name="tests", blank=True
     )
@@ -621,7 +626,7 @@ class UserAnswer(BaseModel):
 
     # Answer metadata
     is_correct = models.BooleanField(_("Is Correct"), default=False)
-    answered_at = models.DateTimeField(_("Answered At"), auto_now_add=True)
+    answered_at = models.DateTimeField(_("Answered At"), null=True, blank=True)
 
     class Meta:
         verbose_name = _("User Answer")
@@ -641,7 +646,9 @@ class UserAnswer(BaseModel):
 
     def save(self, *args, **kwargs):
         """Auto-check correctness when saving"""
-        self.check_correctness()
+        skip_check = kwargs.pop("skip_correctness_check", False)
+        if not skip_check:
+            self.check_correctness()
         super().save(*args, **kwargs)
 
     def check_correctness(self):

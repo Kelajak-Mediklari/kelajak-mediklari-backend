@@ -30,6 +30,26 @@ urlpatterns = [
         name="test-detail",
     ),
     path(
+        "tests/<int:test_id>/start/",
+        course.TestStartAPIView.as_view(),
+        name="test-start",
+    ),
+    path(
+        "tests/<int:test_id>/questions/",
+        course.TestQuestionsAPIView.as_view(),
+        name="test-questions",
+    ),
+    path(
+        "tests/<int:test_id>/answers/<int:answer_id>/",
+        course.SubmitAnswerAPIView.as_view(),
+        name="submit-answer",
+    ),
+    path(
+        "tests/<int:test_id>/finish/",
+        course.FinishTestAPIView.as_view(),
+        name="finish-test",
+    ),
+    path(
         "subjects/<int:subject_id>/roadmap/",
         course.RoadmapAPIView.as_view(),
         name="roadmap",

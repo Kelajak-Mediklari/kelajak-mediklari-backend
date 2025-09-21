@@ -1,6 +1,5 @@
 import random
 
-from django.db.models import Prefetch
 from rest_framework import serializers
 
 from apps.course.models import AnswerChoice, MatchingPair, Question, Test
@@ -160,7 +159,6 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class TestDetailSerializer(serializers.ModelSerializer):
-    questions = serializers.SerializerMethodField()
     attached_files = FileSerializer(many=True, read_only=True)
 
     class Meta:
@@ -172,50 +170,6 @@ class TestDetailSerializer(serializers.ModelSerializer):
             "type",
             "slug",
             "test_duration",
+            "questions_count",
             "attached_files",
-            "questions",
         )
-
-    def get_questions(self, obj):
-        # Pass test type as context to QuestionSerializer
-        context = self.context.copy()
-        context["test_type"] = obj.type
-
-        # Get optimized queryset based on test type to avoid N+1 queries
-        if obj.type == "true_false":
-            questions_queryset = Question.objects.filter(
-                test=obj, is_active=True
-            ).order_by("order")
-        elif obj.type == "matching":
-            questions_queryset = (
-                Question.objects.filter(test=obj, is_active=True)
-                .prefetch_related(
-                    Prefetch(
-                        "matching_pairs",
-                        queryset=MatchingPair.objects.order_by("order"),
-                    )
-                )
-                .order_by("order")
-            )
-        elif obj.type == "book_test":
-            questions_queryset = Question.objects.filter(
-                test=obj, is_active=True
-            ).order_by("order")
-        elif obj.type == "regular_test":
-            questions_queryset = (
-                Question.objects.filter(test=obj, is_active=True)
-                .prefetch_related(
-                    Prefetch(
-                        "choices",
-                        queryset=AnswerChoice.objects.order_by("order"),
-                    )
-                )
-                .order_by("order")
-            )
-        else:
-            # Fallback for unknown test types
-            questions_queryset = Question.objects.filter(
-                test=obj, is_active=True
-            ).order_by("order")
-
-        return QuestionSerializer(questions_queryset, many=True, context=context).data

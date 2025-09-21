@@ -74,7 +74,14 @@ class LessonPartAdmin(admin.ModelAdmin):
 
 @admin.register(Test)
 class TestAdmin(admin.ModelAdmin):
-    list_display = ("title", "slug", "is_active")
+    list_display = (
+        "title",
+        "slug",
+        "questions_count",
+        "test_duration",
+        "type",
+        "is_active",
+    )
     search_fields = ("title", "slug")
     list_filter = ("is_active", "type")
 
