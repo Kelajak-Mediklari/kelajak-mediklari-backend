@@ -30,11 +30,11 @@ class LessonsListSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return False
 
-        # Use annotated field if available (from queryset optimization)
-        if hasattr(obj, "has_user_lesson"):
-            return obj.has_user_lesson
+        # Use prefetched data if available (from queryset optimization)
+        if hasattr(obj, "filtered_user_lessons"):
+            return len(obj.filtered_user_lessons) > 0
 
-        # Fallback for when annotation is not available
+        # Fallback for when prefetch is not available
         course_id = self.context.get("course_id")
         if not course_id:
             return False
@@ -49,11 +49,11 @@ class LessonsListSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return 0.00
 
-        # Use annotated field if available (from queryset optimization)
-        if hasattr(obj, "user_progress_percent"):
-            return float(obj.user_progress_percent)
+        # Use prefetched data if available (from queryset optimization)
+        if hasattr(obj, "filtered_user_lessons") and obj.filtered_user_lessons:
+            return float(obj.filtered_user_lessons[0].progress_percent)
 
-        # Fallback for when annotation is not available
+        # Fallback for when prefetch is not available
         course_id = self.context.get("course_id")
         if not course_id:
             return 0.00
@@ -70,11 +70,11 @@ class LessonsListSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return None
 
-        # Use annotated field if available (from queryset optimization)
-        if hasattr(obj, "user_lesson_id_annotation"):
-            return obj.user_lesson_id_annotation
+        # Use prefetched data if available (from queryset optimization)
+        if hasattr(obj, "filtered_user_lessons") and obj.filtered_user_lessons:
+            return obj.filtered_user_lessons[0].id
 
-        # Fallback for when annotation is not available
+        # Fallback for when prefetch is not available
         course_id = self.context.get("course_id")
         if not course_id:
             return None
@@ -91,11 +91,11 @@ class LessonsListSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return None
 
-        # Use annotated field if available (from queryset optimization)
-        if hasattr(obj, "user_course_id_annotation"):
-            return obj.user_course_id_annotation
+        # Use prefetched data if available (from queryset optimization)
+        if hasattr(obj, "filtered_user_lessons") and obj.filtered_user_lessons:
+            return obj.filtered_user_lessons[0].user_course.id
 
-        # Fallback for when annotation is not available
+        # Fallback for when prefetch is not available
         course_id = self.context.get("course_id")
         if not course_id:
             return None

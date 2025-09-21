@@ -1,4 +1,4 @@
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics
 from rest_framework.permissions import IsAuthenticated
@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.course.api_endpoints.course.LessonsList.serializers import (
     LessonsListSerializer,
 )
-from apps.course.models import Course, Lesson
+from apps.course.models import Course, Lesson, UserLesson
 
 
 class LessonsListAPIView(generics.ListAPIView):
@@ -20,59 +20,22 @@ class LessonsListAPIView(generics.ListAPIView):
         course_id = self.kwargs.get(self.lookup_field)
         course = get_object_or_404(Course, id=course_id, is_active=True)
 
-        # Use annotation to count active parts at the database level
+        # Base queryset with parts count annotation
         queryset = Lesson.objects.filter(course=course, is_active=True).annotate(
             parts_count=Count("parts", filter=Q(parts__is_active=True))
         )
 
-        # Add user progress annotation if user is authenticated
+        # Prefetch user lessons for the current user and course if authenticated
         if self.request.user.is_authenticated:
-            from django.db.models import (
-                BooleanField,
-                Case,
-                DecimalField,
-                IntegerField,
-                When,
+            user_lessons_prefetch = Prefetch(
+                "user_lessons",
+                queryset=UserLesson.objects.filter(
+                    user_course__user=self.request.user,
+                    user_course__course_id=course_id,
+                ).select_related("user_course"),
+                to_attr="filtered_user_lessons",
             )
-
-            queryset = queryset.annotate(
-                user_progress_percent=Case(
-                    When(
-                        user_lessons__user_course__user=self.request.user,
-                        user_lessons__user_course__course_id=course_id,
-                        then="user_lessons__progress_percent",
-                    ),
-                    default=0.00,
-                    output_field=DecimalField(max_digits=5, decimal_places=2),
-                ),
-                has_user_lesson=Case(
-                    When(
-                        user_lessons__user_course__user=self.request.user,
-                        user_lessons__user_course__course_id=course_id,
-                        then=True,
-                    ),
-                    default=False,
-                    output_field=BooleanField(),
-                ),
-                user_lesson_id_annotation=Case(
-                    When(
-                        user_lessons__user_course__user=self.request.user,
-                        user_lessons__user_course__course_id=course_id,
-                        then="user_lessons__id",
-                    ),
-                    default=None,
-                    output_field=IntegerField(),
-                ),
-                user_course_id_annotation=Case(
-                    When(
-                        user_lessons__user_course__user=self.request.user,
-                        user_lessons__user_course__course_id=course_id,
-                        then="user_lessons__user_course__id",
-                    ),
-                    default=None,
-                    output_field=IntegerField(),
-                ),
-            )
+            queryset = queryset.prefetch_related(user_lessons_prefetch)
 
         return queryset
 
