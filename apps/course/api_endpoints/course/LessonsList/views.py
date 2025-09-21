@@ -63,6 +63,15 @@ class LessonsListAPIView(generics.ListAPIView):
                     default=None,
                     output_field=IntegerField(),
                 ),
+                user_course_id_annotation=Case(
+                    When(
+                        user_lessons__user_course__user=self.request.user,
+                        user_lessons__user_course__course_id=course_id,
+                        then="user_lessons__user_course__id",
+                    ),
+                    default=None,
+                    output_field=IntegerField(),
+                ),
             )
 
         return queryset
