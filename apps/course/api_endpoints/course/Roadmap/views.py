@@ -18,7 +18,7 @@ class RoadmapAPIView(APIView):
         # Get the roadmap for this subject
         roadmap = get_object_or_404(Roadmap, subject=subject, is_active=True)
 
-        serializer = RoadmapSerializer(roadmap)
+        serializer = RoadmapSerializer(roadmap, context={"request": request})
         return Response(serializer.data)
 
 
