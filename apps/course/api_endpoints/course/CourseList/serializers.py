@@ -19,6 +19,7 @@ class CourseListSerializer(serializers.ModelSerializer):
             "subject",
             "learning_outcomes",
             "duration",
+            "price",
             "is_main_course",
             "lessons_count",
         )

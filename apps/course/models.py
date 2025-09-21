@@ -82,6 +82,9 @@ class Course(BaseModel):
     )
     learning_outcomes = models.JSONField(null=True, blank=True, default=list)
     duration = models.CharField(_("Duration"), max_length=255, null=True, blank=True)
+    price = models.DecimalField(
+        _("Price"), max_digits=10, decimal_places=2, null=True, blank=True
+    )
 
     is_unlimited = models.BooleanField(_("Is Unlimited"), default=False)
     is_main_course = models.BooleanField(_("Is Main Course"), default=False)
