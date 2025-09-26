@@ -291,8 +291,8 @@ CLICK_ACCOUNT_MODEL = "apps.payment.models.Transaction"
 CLICK_AMOUNT_FIELD = "amount"
 
 # payme
-PAYME_ID = env.str("PAYME_ID", "")
-PAYME_KEY = env.str("PAYME_KEY", "")
+PAYME_ID = env.str("PAYME_ID", "68d53e87ca5dcc61777ba11a")
+PAYME_KEY = env.str("PAYME_KEY", "?2Y@R7EEjIIBUKmIgVfuzYdaWcOQHG0oYxeb")
 PAYME_ACCOUNT_FIELD = "order_id"
 PAYME_AMOUNT_FIELD = "amount"
 PAYME_ACCOUNT_MODEL = "apps.payment.models.Transaction"
