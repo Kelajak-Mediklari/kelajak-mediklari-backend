@@ -24,7 +24,7 @@ admin.site.login_template = "login.html"
 
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
-    path("api/v1/common/", include("apps.common.urls", namespace="common")),
+    path("api/v1/common/", include("apps.common.urwls", namespace="common")),
     path("api/v1/users/", include("apps.users.urls", namespace="users")),
     path("api/v1/course/", include("apps.course.urls", namespace="course")),
     path("api/v1/payment/", include("apps.payment.urls")),
