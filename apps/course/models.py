@@ -681,8 +681,8 @@ class UserAnswer(BaseModel):
             if self.book_answer and self.question.book_questions:
                 # Handle new book_questions structure
                 if (
-                    isinstance(self.question.book_questions, list)
-                    and len(self.question.book_questions) > 0
+                        isinstance(self.question.book_questions, list)
+                        and len(self.question.book_questions) > 0
                 ):
                     # New structure: [{'questions_count': 10, 'questions': [...]}]
                     book_data = self.question.book_questions[0]

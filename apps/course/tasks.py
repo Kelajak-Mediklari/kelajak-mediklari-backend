@@ -11,7 +11,7 @@ def check_expired_courses():
     Runs every hour to check if any course finish_date has passed
     """
     current_time = timezone.now()
-    
+
     with transaction.atomic():
         # Find all UserCourses that have finish_date in the past and are not already marked as expired
         expired_courses = UserCourse.objects.filter(
@@ -19,11 +19,11 @@ def check_expired_courses():
             is_expired=False,
             finish_date__isnull=False
         )
-        
+
         # Update expired courses
         updated_count = expired_courses.update(
             is_expired=True,
             finish_date=None
         )
-        
+
         return f"Updated {updated_count} expired courses"
