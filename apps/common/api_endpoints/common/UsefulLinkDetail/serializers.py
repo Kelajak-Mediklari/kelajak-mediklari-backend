@@ -3,6 +3,9 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 import os
 from apps.common.models import UsefulLink, UsefulLinkCategory, UsefulLinkSubject, UsefulLinkFile
+from apps.common.api_endpoints.common.file_serializers import (
+    AttachedFileSerializer,
+)
 
 
 def get_file_type(file_name):
@@ -74,46 +77,8 @@ def format_file_size(size_bytes):
     return f"{size_bytes:.0f} {size_names[i]}"
 
 
-class FileSerializer(serializers.Serializer):
-    """Reusable file serializer with comprehensive metadata"""
-    
-    def to_representation(self, file_field):
-        if not file_field:
-            return None
-        
-        request = self.context.get('request')
-        
-        # Get file URL
-        if request:
-            file_url = request.build_absolute_uri(file_field.url)
-        else:
-            file_url = f"{settings.MEDIA_URL}{file_field.name}"
-        
-        # Get file metadata
-        file_name = os.path.basename(file_field.name) if file_field.name else None
-        file_type = get_file_type(file_name)
-        file_type_display = get_file_type_display(file_type)
-        
-        # Get file size
-        try:
-            if hasattr(file_field, 'size') and file_field.size:
-                size = file_field.size
-            else:
-                # Try to get size from storage
-                size = default_storage.size(file_field.name) if file_field.name else 0
-        except (OSError, ValueError):
-            size = 0
-        
-        size_display = format_file_size(size)
-        
-        return {
-            'file_url': file_url,
-            'file_type': file_type,
-            'file_type_display': file_type_display,
-            'size': size,
-            'size_display': size_display,
-            'file_name': file_name,
-        }
+class FileSerializer(AttachedFileSerializer):
+    pass
 
 
 class UsefulLinkFileSerializer(serializers.ModelSerializer):

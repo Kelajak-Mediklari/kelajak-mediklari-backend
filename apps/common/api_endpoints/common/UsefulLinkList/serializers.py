@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.conf import settings
 from apps.common.models import UsefulLink
+from apps.common.api_endpoints.common.file_serializers import AttachedFileSerializer
 
 
 class UsefulLinkListSerializer(serializers.ModelSerializer):
@@ -38,20 +39,5 @@ class UsefulLinkListSerializer(serializers.ModelSerializer):
         return None
     
     def get_files(self, obj):
-        files_data = []
-        for file_obj in obj.files.all():
-            if file_obj.file:
-                request = self.context.get('request')
-                if request:
-                    file_url = request.build_absolute_uri(file_obj.file.url)
-                else:
-                    file_url = f"{settings.MEDIA_URL}{file_obj.file.name}"
-                
-                files_data.append({
-                    'id': file_obj.id,
-                    'file': file_url,
-                    'is_active': file_obj.is_active,
-                    'created_at': file_obj.created_at,
-                    'updated_at': file_obj.updated_at
-                })
-        return files_data
+        serializer = AttachedFileSerializer(context=self.context)
+        return [serializer.to_representation(f) for f in obj.files.all() if f.file]

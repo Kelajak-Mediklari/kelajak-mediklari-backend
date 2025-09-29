@@ -3,7 +3,7 @@ import random
 from rest_framework import serializers
 
 from apps.course.models import AnswerChoice, MatchingPair, Question, Test
-from apps.course.serializers import FileSerializer
+from apps.common.api_endpoints.common.file_serializers import AttachedFileSerializer
 
 
 class AnswerChoiceSerializer(serializers.ModelSerializer):
@@ -159,7 +159,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class TestDetailSerializer(serializers.ModelSerializer):
-    attached_files = FileSerializer(many=True, read_only=True)
+    attached_files = AttachedFileSerializer(many=True, read_only=True)
 
     class Meta:
         model = Test

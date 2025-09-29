@@ -1,12 +1,13 @@
 from rest_framework import serializers
 
 from apps.course.models import LessonPart, UserLessonPart
-from apps.course.serializers import FileSerializer, GallerySerializer
+from apps.course.serializers import GallerySerializer
+from apps.common.api_endpoints.common.file_serializers import AttachedFileSerializer
 
 
 class LessonPartDetailSerializer(serializers.ModelSerializer):
     galleries = GallerySerializer(many=True, read_only=True)
-    attached_files = FileSerializer(many=True, read_only=True)
+    attached_files = AttachedFileSerializer(many=True, read_only=True)
     is_user_lesson_part_completed = serializers.SerializerMethodField()
     user_lesson_id = serializers.SerializerMethodField()
 
