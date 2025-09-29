@@ -11,8 +11,8 @@ DEBUG = False
 ###################################################################
 
 USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO")
-CORS_ORIGIN_ALLOW_ALL = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = ["https://panel.kelajakmediklari.uz", "https://kelajakmediklari.uz",
                         "https://testkm.kelajakmediklari.uz", "http://localhost:3000"]
@@ -21,9 +21,9 @@ CSRF_TRUSTED_ORIGINS = ["https://panel.kelajakmediklari.uz", "https://kelajakmed
 # CORS
 ###################################################################
 
-# When credentials are allowed, you must explicitly list allowed origins
-CORS_ALLOW_HEADERS = ["*"]
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = ["*"]
 
 REDIS_HOST = env.str("REDIS_HOST", "redis")
 REDIS_PORT = env.int("REDIS_PORT", 6379)
