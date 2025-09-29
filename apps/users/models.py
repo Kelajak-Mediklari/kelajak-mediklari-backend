@@ -11,10 +11,12 @@ from apps.users.managers import SoftDeleteUserManager
 
 
 class User(AbstractUser, BaseModel):
+    class Role(models.TextChoices):
+        STUDENT = "STUDENT", _("Student")
+        TEACHER = "TEACHER", _("Teacher")
     class Gender(models.TextChoices):
         MALE = "MALE", _("Male")
         FEMALE = "FEMALE", _("Female")
-    
 
     full_name = models.CharField(
         verbose_name=_("Full name"), max_length=255, null=True, blank=True
@@ -47,6 +49,7 @@ class User(AbstractUser, BaseModel):
     address_index = models.CharField(_("Address index"), max_length=255, null=True, blank=True)
     gender = models.CharField(_("Gender"), max_length=255, null=True, blank=True, choices=Gender.choices)
     is_deleted = models.BooleanField(_("Is deleted"), default=False)
+    role = models.CharField(_("Role"), max_length=20, choices=Role.choices, default=Role.STUDENT, db_index=True)
 
     objects = SoftDeleteUserManager()
     USERNAME_FIELD = "phone"

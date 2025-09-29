@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from apps.users.api_endpoints.auth.SendForgetPasswordCode.serializers import (
     SendForgetPasswordCodeSerializer,
 )
+from apps.users.models import User
 from apps.users.services import CacheTypes, MessageProvider
 
 
@@ -30,6 +31,19 @@ class SendForgetPasswordCodeView(APIView):
         serializer = self.serializer_class(data=request.data)
         await sync_to_async(serializer.is_valid)(raise_exception=True)
         phone = serializer.validated_data.get("phone")
+
+        # Block TEACHER from receiving forget password OTP
+        try:
+            user = await sync_to_async(User.objects.get)(phone=phone)
+            if user.role == User.Role.TEACHER:
+                raise ValidationError(
+                    detail={
+                        "role": _("Teacher accounts cannot reset password via this endpoint."),
+                    },
+                    code="forbidden",
+                )
+        except User.DoesNotExist:
+            pass
 
         # Rate limiting approach
         rate_limit_key = f"rate_limit:{CacheTypes.forget_pass_sms_code}:{str(phone)}"

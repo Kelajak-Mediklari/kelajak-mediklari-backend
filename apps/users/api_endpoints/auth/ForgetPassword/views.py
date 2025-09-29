@@ -47,6 +47,14 @@ class ForgetPasswordView(generics.GenericAPIView):
         # Get user and update password
         try:
             user = User.objects.get(phone=phone)
+            # Block TEACHER from resetting password via this endpoint
+            if user.role == User.Role.TEACHER:
+                raise ValidationError(
+                    detail={
+                        "role": _("Teacher accounts cannot reset password via this endpoint."),
+                    },
+                    code="forbidden",
+                )
             user.set_password(password)
             user.save()
         except User.DoesNotExist:
