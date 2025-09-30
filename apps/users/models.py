@@ -14,6 +14,7 @@ class User(AbstractUser, BaseModel):
     class Role(models.TextChoices):
         STUDENT = "STUDENT", _("Student")
         TEACHER = "TEACHER", _("Teacher")
+
     class Gender(models.TextChoices):
         MALE = "MALE", _("Male")
         FEMALE = "FEMALE", _("Female")

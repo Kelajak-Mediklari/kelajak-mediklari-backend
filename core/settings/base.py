@@ -291,8 +291,8 @@ CLICK_ACCOUNT_MODEL = "apps.payment.models.Transaction"
 CLICK_AMOUNT_FIELD = "amount"
 
 # payme
-PAYME_ID = env.str("PAYME_ID", "68d53e87ca5dcc61777ba11a")
-PAYME_KEY = env.str("PAYME_KEY", "?2Y@R7EEjIIBUKmIgVfuzYdaWcOQHG0oYxeb")
+PAYME_ID = env.str("PAYME_ID", "68c800820498426284f4bf60")
+PAYME_KEY = env.str("PAYME_KEY", "w#giP@JPmUz@EKceSGA3t9u@OPr3kcdSjWNH")
 PAYME_ACCOUNT_FIELD = "order_id"
 PAYME_AMOUNT_FIELD = "amount"
 PAYME_ACCOUNT_MODEL = "apps.payment.models.Transaction"
@@ -335,7 +335,6 @@ TINYMCE_DEFAULT_CONFIG = {
         Verdana=verdana,geneva,sans-serif;
     """,
 }
-
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 CKEDITOR_CONFIGS = {
