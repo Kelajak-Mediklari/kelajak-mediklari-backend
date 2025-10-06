@@ -366,6 +366,35 @@ class UserCourse(BaseModel):
         self.save()
         return self.progress_percent
 
+    def sync_user_balance(self):
+        """Sync user's actual coin and point balance with course earnings"""
+        # Calculate total earned from all completed lesson parts
+        total_coins = 0
+        total_points = 0
+
+        for user_lesson in self.user_lessons.filter(is_completed=True):
+            for user_lesson_part in user_lesson.user_lesson_parts.filter(is_completed=True):
+                total_coins += user_lesson_part.lesson_part.award_coin
+                total_points += user_lesson_part.lesson_part.award_point
+
+        # Update the user's balance
+        current_user_coins = self.user.coin
+        current_user_points = self.user.point
+
+        # Calculate difference and update
+        coin_diff = total_coins - current_user_coins
+        point_diff = total_points - current_user_points
+
+        if coin_diff != 0:
+            self.user.add_coins(coin_diff)
+        if point_diff != 0:
+            self.user.add_points(point_diff)
+
+        # Update course totals
+        self.coins_earned = total_coins
+        self.points_earned = total_points
+        self.save(update_fields=['coins_earned', 'points_earned'])
+
     def get_next_lesson(self):
         """Get the next uncompleted lesson in the course"""
         completed_lesson_ids = self.user_lessons.filter(is_completed=True).values_list(
@@ -377,6 +406,24 @@ class UserCourse(BaseModel):
             .exclude(id__in=completed_lesson_ids)
             .first()
         )
+
+    @classmethod
+    def get_total_earnings_for_user(cls, user):
+        """Get total coins and points earned by a user across all courses"""
+        from django.db.models import Sum
+
+        total_earnings = cls.objects.filter(
+            user=user,
+            is_completed=True
+        ).aggregate(
+            total_coins=Sum('coins_earned'),
+            total_points=Sum('points_earned')
+        )
+
+        return {
+            'total_coins': total_earnings['total_coins'] or 0,
+            'total_points': total_earnings['total_points'] or 0
+        }
 
 
 class UserLesson(BaseModel):
@@ -499,6 +546,11 @@ class UserLessonPart(BaseModel):
             user_course.coins_earned += self.lesson_part.award_coin
             user_course.points_earned += self.lesson_part.award_point
             user_course.save()
+
+            # Update user's actual coin and point balance (always, even if 0)
+            user = user_course.user
+            user.add_coins(self.lesson_part.award_coin)
+            user.add_points(self.lesson_part.award_point)
 
             self.save()
 

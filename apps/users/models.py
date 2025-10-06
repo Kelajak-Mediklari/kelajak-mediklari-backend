@@ -51,6 +51,17 @@ class User(AbstractUser, BaseModel):
     gender = models.CharField(_("Gender"), max_length=255, null=True, blank=True, choices=Gender.choices)
     is_deleted = models.BooleanField(_("Is deleted"), default=False)
     role = models.CharField(_("Role"), max_length=20, choices=Role.choices, default=Role.STUDENT, db_index=True)
+    coin = models.PositiveIntegerField(_("Coin"), default=0, help_text=_("User's coin balance"))
+    point = models.PositiveIntegerField(_("Point"), default=0, help_text=_("User's point balance"))
+    teacher = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        verbose_name=_("Teacher"),
+        null=True,
+        blank=True,
+        related_name='students',
+        help_text=_("The teacher assigned to this student")
+    )
 
     objects = SoftDeleteUserManager()
     USERNAME_FIELD = "phone"
@@ -119,6 +130,50 @@ class User(AbstractUser, BaseModel):
                 username = f"{base_username[:140 - 10]}{timestamp}"
 
         return username
+
+    def add_coins(self, amount):
+        """Add coins to user's balance"""
+        if amount > 0:
+            self.coin += amount
+            self.save(update_fields=['coin'])
+
+    def subtract_coins(self, amount):
+        """Subtract coins from user's balance"""
+        if amount > 0 and self.coin >= amount:
+            self.coin -= amount
+            self.save(update_fields=['coin'])
+            return True
+        return False
+
+    def add_points(self, amount):
+        """Add points to user's balance"""
+        if amount > 0:
+            self.point += amount
+            self.save(update_fields=['point'])
+
+    def subtract_points(self, amount):
+        """Subtract points from user's balance"""
+        if amount > 0 and self.point >= amount:
+            self.point -= amount
+            self.save(update_fields=['point'])
+            return True
+        return False
+
+    @property
+    def is_teacher(self):
+        """Check if user is a teacher"""
+        return self.role == self.Role.TEACHER
+
+    @property
+    def is_student(self):
+        """Check if user is a student"""
+        return self.role == self.Role.STUDENT
+
+    def get_students(self):
+        """Get all students assigned to this teacher"""
+        if self.is_teacher:
+            return self.students.filter(is_deleted=False)
+        return User.objects.none()
 
     class Meta:
         verbose_name = _("User")

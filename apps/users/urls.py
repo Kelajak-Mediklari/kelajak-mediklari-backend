@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .api_endpoints import auth, profile
+from .api_endpoints import auth, profile, dashboard
 
 app_name = "users"
 
@@ -39,4 +39,5 @@ urlpatterns = [
         profile.UserChangePhoneAPIView.as_view(),
         name="profile-change-phone",
     ),
+    path("dashboard/", dashboard.UserDashboardView.as_view(), name="user-dashboard"),
 ]

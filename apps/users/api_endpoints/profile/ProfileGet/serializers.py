@@ -23,5 +23,7 @@ class ProfileGetSerializer(serializers.ModelSerializer):
             "district", 
             "district_name",
             "address_index",
-            "gender"
+            "gender",
+            "coin",
+            "point"
         ]

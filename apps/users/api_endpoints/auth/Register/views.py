@@ -78,6 +78,8 @@ class RegisterView(generics.GenericAPIView):
                 "avatar": request.build_absolute_uri(user.avatar.url)
                 if user.avatar
                 else None,
+                "coin": user.coin,
+                "point": user.point,
             },
             "created": True,
         }
