@@ -53,6 +53,7 @@ class User(AbstractUser, BaseModel):
     role = models.CharField(_("Role"), max_length=20, choices=Role.choices, default=Role.STUDENT, db_index=True)
     coin = models.PositiveIntegerField(_("Coin"), default=0, help_text=_("User's coin balance"))
     point = models.PositiveIntegerField(_("Point"), default=0, help_text=_("User's point balance"))
+    referral_point = models.PositiveIntegerField(_("Referral point"), default=0, help_text=_("User's referral point balance"))
     teacher = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
