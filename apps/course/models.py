@@ -89,6 +89,8 @@ class Course(BaseModel):
     is_unlimited = models.BooleanField(_("Is Unlimited"), default=False)
     is_main_course = models.BooleanField(_("Is Main Course"), default=False)
     is_active = models.BooleanField(_("Is Active"), default=True)
+    is_can_pay_with_coin = models.BooleanField(_("Is Can Pay With Coin"), default=False)
+    is_can_pay_with_referral = models.BooleanField(_("Is Can Pay With Referral"), default=False)
 
     class Meta:
         verbose_name = _("Course")

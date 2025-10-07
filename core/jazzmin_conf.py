@@ -50,6 +50,10 @@ JAZZMIN_SETTINGS = {
         "course.UserTest",
         "course.UserAnswer",
         "payment.Transaction",
+        "payment.PromoCode",
+        "payment.UserPromoCode",
+        "payment.CoinReservation",
+        "payment.PromoCodeReservation",
     ],
     # App and model icons
     "icons": {
@@ -89,6 +93,10 @@ JAZZMIN_SETTINGS = {
         "course.useranswer": "fas fa-comment-dots",
         # Payment models
         "payment.transaction": "fas fa-receipt",
+        "payment.promocode": "fas fa-ticket-alt",
+        "payment.userpromocode": "fas fa-user-tag",
+        "payment.coinreservation": "fas fa-lock",
+        "payment.promocodereservation": "fas fa-clock",
     },
 }
 

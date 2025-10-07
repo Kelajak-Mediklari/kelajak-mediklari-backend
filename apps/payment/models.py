@@ -39,6 +39,39 @@ class Transaction(BaseModel):
     canceled_at = models.DateTimeField(verbose_name=_('canceled at'), null=True, blank=True)
     status = models.CharField(max_length=20, choices=TransactionStatus.choices, verbose_name=_("status"))
 
+    # Discount fields
+    original_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name=_('original amount'),
+        null=True,
+        blank=True,
+        help_text=_('Original course price before discounts')
+    )
+    promo_code = models.CharField(
+        max_length=255,
+        verbose_name=_('promo code'),
+        null=True,
+        blank=True,
+        help_text=_('Promo code used in this transaction')
+    )
+    promo_discount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name=_('promo discount'),
+        null=True,
+        blank=True,
+        default=0,
+        help_text=_('Discount amount from promo code')
+    )
+    coins_used = models.IntegerField(
+        verbose_name=_('coins used'),
+        null=True,
+        blank=True,
+        default=0,
+        help_text=_('Number of coins used in this transaction')
+    )
+
     def __str__(self):
         return f'{self.user.full_name}:{self.course.title}'
 
@@ -96,3 +129,72 @@ class Transaction(BaseModel):
             )
 
         return payment_url
+
+
+class PromoCode(BaseModel):
+    code = models.CharField(max_length=255, verbose_name=_("code"))
+    discount = models.IntegerField(verbose_name=_("discount"))
+    courses = models.ManyToManyField("course.Course", verbose_name=_("courses"), related_name="promocodes")
+    is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+
+    def __str__(self):
+        return self.code
+
+    class Meta:
+        verbose_name = _("PromoCode")
+        verbose_name_plural = _("PromoCodes")
+
+
+class UserPromoCode(BaseModel):
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="up_users", verbose_name=_("user"))
+    promocode = models.ForeignKey("payment.PromoCode", on_delete=models.CASCADE, related_name="up_promocodes",
+                                  verbose_name=_("promocode"))
+    is_used = models.BooleanField(default=True, verbose_name=_("is used"))
+    transaction = models.ForeignKey("payment.Transaction", on_delete=models.CASCADE, null=True, blank=True,
+                                   verbose_name=_("transaction"), help_text=_("Transaction that used this promo code"))
+
+    def __str__(self):
+        return f"{self.user.full_name}:{self.promocode.code}"
+
+    class Meta:
+        verbose_name = _("User PromoCode")
+        verbose_name_plural = _("User PromoCode")
+
+
+class CoinReservation(BaseModel):
+    """Temporary coin reservation for pending transactions"""
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="coin_reservations", 
+                           verbose_name=_("user"))
+    amount = models.PositiveIntegerField(verbose_name=_("amount"), help_text=_("Amount of coins reserved"))
+    transaction = models.ForeignKey("payment.Transaction", on_delete=models.CASCADE, null=True, blank=True,
+                                  verbose_name=_("transaction"), help_text=_("Transaction that reserved these coins"))
+    expires_at = models.DateTimeField(verbose_name=_("expires at"), 
+                                    help_text=_("When this reservation expires"))
+    is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+
+    def __str__(self):
+        return f"{self.user.full_name}: {self.amount} coins (expires {self.expires_at})"
+
+    class Meta:
+        verbose_name = _("Coin Reservation")
+        verbose_name_plural = _("Coin Reservations")
+
+
+class PromoCodeReservation(BaseModel):
+    """Temporary promo code reservation for pending transactions"""
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="promo_reservations", 
+                           verbose_name=_("user"))
+    promocode = models.ForeignKey("payment.PromoCode", on_delete=models.CASCADE, 
+                                verbose_name=_("promo code"))
+    transaction = models.ForeignKey("payment.Transaction", on_delete=models.CASCADE, null=True, blank=True,
+                                  verbose_name=_("transaction"), help_text=_("Transaction that reserved this promo code"))
+    expires_at = models.DateTimeField(verbose_name=_("expires at"), 
+                                    help_text=_("When this reservation expires"))
+    is_active = models.BooleanField(default=True, verbose_name=_("is active"))
+
+    def __str__(self):
+        return f"{self.user.full_name}: {self.promocode.code} (expires {self.expires_at})"
+
+    class Meta:
+        verbose_name = _("Promo Code Reservation")
+        verbose_name_plural = _("Promo Code Reservations")
