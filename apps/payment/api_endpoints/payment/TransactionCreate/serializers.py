@@ -52,16 +52,23 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         
         try:
-            course = Course.objects.get(id=course_id, is_active=True)
+            course = Course.objects.get(id=course_id, is_active=True, is_deleted=False)
         except Course.DoesNotExist:
             raise serializers.ValidationError({
-                'course_id': 'Course not found or inactive'
+                'course_id': 'Course not found, inactive, or deleted'
             })
         
         # Check if course has a price
         if course.price is None:
             raise serializers.ValidationError({
                 'course_id': 'This course is free and does not require payment'
+            })
+        
+        # Check if user already has this course
+        from apps.course.models import UserCourse
+        if UserCourse.objects.filter(user=user, course=course, is_deleted=False).exists():
+            raise serializers.ValidationError({
+                'course_id': 'You already have access to this course'
             })
         
         original_price = course.price  # Keep as Decimal

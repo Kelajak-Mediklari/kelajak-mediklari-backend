@@ -5,6 +5,7 @@ from apps.payment.models import (
     CoinReservation, PromoCodeReservation, 
     Transaction, TransactionStatus
 )
+from apps.course.models import Course
 
 
 @shared_task(time_limit=300, bind=True)
@@ -26,7 +27,8 @@ def cleanup_expired_reservations(self):
         'coin_reservations_cleaned': 0,
         'promo_reservations_cleaned': 0,
         'transactions_canceled': 0,
-        'old_transactions_deleted': 0
+        'old_transactions_deleted': 0,
+        'invalid_transactions_cleaned': 0
     }
     
     try:
@@ -70,6 +72,33 @@ def cleanup_expired_reservations(self):
                     results['transactions_canceled'] += 1
                 
                 results['promo_reservations_cleaned'] += 1
+            
+            # Clean up transactions with invalid/deleted courses
+            invalid_transactions = Transaction.objects.filter(
+                status=TransactionStatus.PENDING,
+                course__isnull=False
+            ).exclude(
+                course__in=Course.objects.filter(is_active=True, is_deleted=False)
+            )
+            
+            for transaction in invalid_transactions:
+                # Cancel transactions with invalid courses
+                transaction.status = TransactionStatus.CANCELED
+                transaction.canceled_at = now
+                transaction.save()
+                
+                # Release associated reservations
+                CoinReservation.objects.filter(
+                    transaction=transaction,
+                    is_active=True
+                ).update(is_active=False)
+                
+                PromoCodeReservation.objects.filter(
+                    transaction=transaction,
+                    is_active=True
+                ).update(is_active=False)
+                
+                results['invalid_transactions_cleaned'] += 1
             
             # Clean up old canceled transactions (older than 7 days)
             old_canceled_transactions = Transaction.objects.filter(

@@ -26,8 +26,12 @@ class DiscountApplyView(GenericAPIView):
         coins_to_use = serializer.validated_data.get('coins_to_use', 0)
 
         with transaction.atomic():
-            # Get course
-            course = Course.objects.get(id=course_id)
+            # Get course with validation
+            try:
+                course = Course.objects.get(id=course_id, is_active=True, is_deleted=False)
+            except Course.DoesNotExist:
+                return Response({'error': 'Course not found, inactive, or deleted'}, status=status.HTTP_400_BAD_REQUEST)
+            
             original_price = course.price  # Keep as Decimal
 
             # Initialize discount tracking
