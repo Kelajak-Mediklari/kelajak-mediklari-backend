@@ -78,7 +78,7 @@ def cleanup_expired_reservations(self):
                 status=TransactionStatus.PENDING,
                 course__isnull=False
             ).exclude(
-                course__in=Course.objects.filter(is_active=True, is_deleted=False)
+                course__in=Course.objects.filter(is_active=True)
             )
             
             for transaction in invalid_transactions:

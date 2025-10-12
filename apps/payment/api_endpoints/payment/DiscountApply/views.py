@@ -28,7 +28,7 @@ class DiscountApplyView(GenericAPIView):
         with transaction.atomic():
             # Get course with validation
             try:
-                course = Course.objects.get(id=course_id, is_active=True, is_deleted=False)
+                course = Course.objects.get(id=course_id, is_active=True)
             except Course.DoesNotExist:
                 return Response({'error': 'Course not found, inactive, or deleted'}, status=status.HTTP_400_BAD_REQUEST)
             

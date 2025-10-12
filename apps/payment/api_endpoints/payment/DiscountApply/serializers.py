@@ -51,7 +51,7 @@ class DiscountApplySerializer(serializers.Serializer):
         coins_to_use = attrs.get('coins_to_use', 0)
 
         try:
-            course = Course.objects.get(id=course_id, is_active=True, is_deleted=False)
+            course = Course.objects.get(id=course_id, is_active=True)
         except Course.DoesNotExist:
             raise serializers.ValidationError({
                 'course_id': 'Course not found, inactive, or deleted'
@@ -61,7 +61,7 @@ class DiscountApplySerializer(serializers.Serializer):
 
         # Check if user already has this course
         from apps.course.models import UserCourse
-        if UserCourse.objects.filter(user=user, course=course, is_deleted=False).exists():
+        if UserCourse.objects.filter(user=user, course=course).exists():
             raise serializers.ValidationError({
                 'course_id': 'You already have access to this course'
             })
