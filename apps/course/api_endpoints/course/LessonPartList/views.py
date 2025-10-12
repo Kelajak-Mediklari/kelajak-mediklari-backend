@@ -22,6 +22,7 @@ class LessonPartListAPIView(generics.ListAPIView):
         return (
             LessonPart.objects.filter(lesson=lesson, is_active=True)
             .select_related("test")
+            .prefetch_related("test__user_tests")
             .order_by("order")
         )
 
