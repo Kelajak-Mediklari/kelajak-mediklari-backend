@@ -66,4 +66,9 @@ urlpatterns = [
         course.UserLessonPartCreateAPIView.as_view(),
         name="user-lesson-part-create",
     ),
+    path(
+        "user-test-results/<int:user_test_id>/",
+        course.UserTestResultsAPIView.as_view(),
+        name="user-test-results",
+    ),
 ]

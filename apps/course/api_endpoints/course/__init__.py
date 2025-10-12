@@ -12,3 +12,4 @@ from .TestStart.views import *  # noqa
 from .UserCoursesList.views import *  # noqa
 from .UserLessonCreate.views import *  # noqa
 from .UserLessonPartCreate.views import *  # noqa
+from .UserTestResults.views import *  # noqa  # noqa
