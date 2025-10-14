@@ -2,8 +2,8 @@ import random
 
 from rest_framework import serializers
 
-from apps.course.models import AnswerChoice, MatchingPair, Question, Test
 from apps.common.api_endpoints.common.file_serializers import AttachedFileSerializer
+from apps.course.models import AnswerChoice, MatchingPair, Question, Test
 
 
 class AnswerChoiceSerializer(serializers.ModelSerializer):
@@ -160,6 +160,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class TestDetailSerializer(serializers.ModelSerializer):
     attached_files = AttachedFileSerializer(many=True, read_only=True)
+    is_submitted = serializers.SerializerMethodField()
 
     class Meta:
         model = Test
@@ -172,4 +173,19 @@ class TestDetailSerializer(serializers.ModelSerializer):
             "test_duration",
             "questions_count",
             "attached_files",
+            "is_submitted",
         )
+
+    def get_is_submitted(self, obj):
+        """Check if the current user has submitted this test"""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+
+        # Import here to avoid circular imports
+        from apps.course.models import UserTest
+
+        # Check if user has any submitted test for this test
+        return UserTest.objects.filter(
+            test=obj, user=request.user, is_submitted=True
+        ).exists()

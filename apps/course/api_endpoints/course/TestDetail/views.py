@@ -18,5 +18,11 @@ class TestDetailAPIView(generics.RetrieveAPIView):
             id=test_id,
         )
 
+    def get_serializer_context(self):
+        """Add request to serializer context"""
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
 
 __all__ = ["TestDetailAPIView"]
