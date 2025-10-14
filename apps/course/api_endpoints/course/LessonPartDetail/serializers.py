@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from apps.course.models import LessonPart, UserLessonPart
-from apps.course.serializers import GallerySerializer
 from apps.common.api_endpoints.common.file_serializers import AttachedFileSerializer
+from apps.course.models import LessonPart, UserLesson, UserLessonPart
+from apps.course.serializers import GallerySerializer
 
 
 class LessonPartDetailSerializer(serializers.ModelSerializer):
@@ -45,7 +45,7 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
         if not request or not request.user or not request.user.is_authenticated:
             return None
 
-        # Find the UserLesson for this lesson part and user
+        # First, try to find UserLesson through UserLessonPart
         user_lesson_part = (
             UserLessonPart.objects.select_related("user_lesson")
             .filter(
@@ -57,4 +57,15 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
 
         if user_lesson_part:
             return user_lesson_part.user_lesson.id
+
+        # If no UserLessonPart exists, try to find UserLesson directly
+        # This handles cases where user started a lesson but hasn't created UserLessonPart yet
+        user_lesson = UserLesson.objects.filter(
+            lesson=obj.lesson,
+            user_course__user=request.user,
+        ).first()
+
+        if user_lesson:
+            return user_lesson.id
+
         return None
