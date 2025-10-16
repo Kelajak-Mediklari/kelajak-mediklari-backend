@@ -53,7 +53,8 @@ class User(AbstractUser, BaseModel):
     role = models.CharField(_("Role"), max_length=20, choices=Role.choices, default=Role.STUDENT, db_index=True)
     coin = models.PositiveIntegerField(_("Coin"), default=0, help_text=_("User's coin balance"))
     point = models.PositiveIntegerField(_("Point"), default=0, help_text=_("User's point balance"))
-    referral_point = models.PositiveIntegerField(_("Referral point"), default=0, help_text=_("User's referral point balance"))
+    referral_point = models.PositiveIntegerField(_("Referral point"), default=0,
+                                                 help_text=_("User's referral point balance"))
     teacher = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -63,6 +64,10 @@ class User(AbstractUser, BaseModel):
         related_name='students',
         help_text=_("The teacher assigned to this student")
     )
+    teacher_global_limit = models.PositiveIntegerField(_("Teacher global limit"), default=0,
+                                                       help_text=_("Teacher's global limit"))
+    teacher_global_limit_used = models.PositiveIntegerField(_("Teacher global limit used"), default=0,
+                                                            help_text=_("Teacher's global limit used"))
 
     objects = SoftDeleteUserManager()
     USERNAME_FIELD = "phone"
@@ -170,6 +175,11 @@ class User(AbstractUser, BaseModel):
         """Check if user is a student"""
         return self.role == self.Role.STUDENT
 
+    @property
+    def is_selected_by_teacher(self):
+        """Check if user is selected by a teacher"""
+        return GroupMember.objects.filter(user_id=self.pk).exists()
+
     def get_students(self):
         """Get all students assigned to this teacher"""
         if self.is_teacher:
@@ -194,3 +204,21 @@ class UserDevice(BaseModel):
     class Meta:
         verbose_name = _("User device")
         verbose_name_plural = _("User devices")
+
+
+class Group(BaseModel):
+    name = models.CharField(_("Name"), max_length=255)
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Teacher"), related_name="teaching_groups")
+
+    class Meta:
+        verbose_name = _("Group")
+        verbose_name_plural = _("Groups")
+
+
+class GroupMember(BaseModel):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_("Group"), related_name="members")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("User"), related_name="group_members")
+
+    class Meta:
+        verbose_name = _("Group member")
+        verbose_name_plural = _("Group members")
