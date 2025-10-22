@@ -64,10 +64,6 @@ class User(AbstractUser, BaseModel):
         related_name='students',
         help_text=_("The teacher assigned to this student")
     )
-    teacher_global_limit = models.PositiveIntegerField(_("Teacher global limit"), default=0,
-                                                       help_text=_("Teacher's global limit"))
-    teacher_global_limit_used = models.PositiveIntegerField(_("Teacher global limit used"), default=0,
-                                                            help_text=_("Teacher's global limit used"))
 
     objects = SoftDeleteUserManager()
     USERNAME_FIELD = "phone"
@@ -208,17 +204,46 @@ class UserDevice(BaseModel):
 
 class Group(BaseModel):
     name = models.CharField(_("Name"), max_length=255)
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Teacher"), related_name="teaching_groups")
+    course = models.ForeignKey("course.Course", on_delete=models.CASCADE, verbose_name=_("Course"),
+                               related_name="course_groups", null=True)
+    teacher = models.ForeignKey("users.User", on_delete=models.CASCADE, verbose_name=_("Teacher"),
+                                related_name="teaching_groups")
+    max_member_count = models.IntegerField(_("Max member count"), default=0)
+    current_member_count = models.IntegerField(_("Current member count"), default=0)
 
     class Meta:
         verbose_name = _("Group")
         verbose_name_plural = _("Groups")
 
+    def __str__(self):
+        return f"{self.name} - {self.course.title}"
+
 
 class GroupMember(BaseModel):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_("Group"), related_name="members")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("User"), related_name="group_members")
+    group = models.ForeignKey("users.Group", on_delete=models.CASCADE, verbose_name=_("Group"), related_name="members")
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, verbose_name=_("User"),
+                             related_name="group_members")
 
     class Meta:
         verbose_name = _("Group member")
         verbose_name_plural = _("Group members")
+
+    def __str__(self):
+        return f"{self.group.name} - {self.user.username}"
+
+
+class TeacherGlobalLimit(BaseModel):
+    teacher = models.ForeignKey("users.User", on_delete=models.CASCADE, verbose_name=_("Teacher"),
+                                related_name="teacher_global_limits")
+    course = models.ForeignKey("course.Course", on_delete=models.CASCADE, verbose_name=_("Course"),
+                               related_name="course_teacher_global_limits")
+    limit = models.IntegerField(_("Limit"), default=0, help_text=_("Teacher's global limit"))
+    used = models.IntegerField(_("Used"), default=0, help_text=_("Teacher's global limit used"))
+    remaining = models.IntegerField(_("Remaining"), default=0, help_text=_("Teacher's global limit remaining"))
+
+    class Meta:
+        verbose_name = _("Teacher global limit")
+        verbose_name_plural = _("Teacher global limits")
+
+    def __str__(self):
+        return f"{self.teacher.username} - {self.course.title}"
