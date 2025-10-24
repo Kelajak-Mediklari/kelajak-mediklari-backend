@@ -10,6 +10,7 @@ class LessonsListSerializer(serializers.ModelSerializer):
     progress_percent = serializers.SerializerMethodField()
     user_lesson_id = serializers.SerializerMethodField()
     user_course_id = serializers.SerializerMethodField()
+    slug = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -105,4 +106,33 @@ class LessonsListSerializer(serializers.ModelSerializer):
             user_course = UserCourse.objects.get(user=request.user, course_id=course_id)
             return user_course.id
         except UserCourse.DoesNotExist:
+            return None
+
+    def get_slug(self, obj):
+        """Return slug only for first 3 lessons if user hasn't bought the course"""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+
+        # Check if user has purchased the course
+        user_course = self.context.get("user_course")
+        if user_course:
+            # User has purchased the course, return the actual slug
+            return obj.slug
+
+        # User hasn't purchased the course, check if this is one of the first 3 lessons
+        course_id = self.context.get("course_id")
+        if not course_id:
+            return None
+
+        # Get the first 3 lessons of the course ordered by id
+        first_three_lessons = Lesson.objects.filter(
+            course_id=course_id, 
+            is_active=True
+        ).order_by('id')[:3]
+
+        # Check if current lesson is in the first 3
+        if obj in first_three_lessons:
+            return obj.slug
+        else:
             return None
