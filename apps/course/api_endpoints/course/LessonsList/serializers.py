@@ -18,6 +18,7 @@ class LessonsListSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "slug",
+            "order",
             "parts_count",
             "is_user_lesson_created",
             "user_lesson_id",

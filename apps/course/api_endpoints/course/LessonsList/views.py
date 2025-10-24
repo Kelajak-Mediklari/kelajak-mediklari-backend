@@ -23,7 +23,7 @@ class LessonsListAPIView(generics.ListAPIView):
         # Base queryset with parts count annotation
         queryset = Lesson.objects.filter(course=course, is_active=True).annotate(
             parts_count=Count("parts", filter=Q(parts__is_active=True))
-        )
+        ).order_by("order")
 
         # Prefetch user lessons for the current user and course if authenticated
         if self.request.user.is_authenticated:

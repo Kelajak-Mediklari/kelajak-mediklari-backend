@@ -112,6 +112,7 @@ class Lesson(BaseModel):
     course = models.ForeignKey(
         "course.Course", on_delete=models.CASCADE, related_name="lessons"
     )
+    order = models.PositiveIntegerField(_("Order"), default=1)
     theoretical_pass_ball = models.IntegerField(_("Theoretical Pass Ball"), default=0)
     practical_pass_ball = models.IntegerField(_("Practical Pass Ball"), default=0)
     is_active = models.BooleanField(_("Is Active"), default=True)
