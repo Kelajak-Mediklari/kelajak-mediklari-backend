@@ -82,6 +82,7 @@ class Course(BaseModel):
     )
     learning_outcomes = models.JSONField(null=True, blank=True, default=list)
     duration = models.CharField(_("Duration"), max_length=255, null=True, blank=True)
+    duration_months = models.IntegerField(_("Duration Months"), default=0)
     price = models.DecimalField(
         _("Price"), max_digits=10, decimal_places=2, null=True, blank=True
     )
@@ -111,6 +112,8 @@ class Lesson(BaseModel):
     course = models.ForeignKey(
         "course.Course", on_delete=models.CASCADE, related_name="lessons"
     )
+    theoretical_pass_ball = models.IntegerField(_("Theoretical Pass Ball"), default=0)
+    practical_pass_ball = models.IntegerField(_("Practical Pass Ball"), default=0)
     is_active = models.BooleanField(_("Is Active"), default=True)
 
     def __str__(self):

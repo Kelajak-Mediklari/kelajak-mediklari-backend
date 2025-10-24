@@ -210,6 +210,8 @@ class Group(BaseModel):
                                 related_name="teaching_groups")
     max_member_count = models.IntegerField(_("Max member count"), default=0)
     current_member_count = models.IntegerField(_("Current member count"), default=0)
+    is_active = models.BooleanField(_("Is active"), default=True)
+    group_end_date = models.DateField(_("Group end date"), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Group")
@@ -223,6 +225,7 @@ class GroupMember(BaseModel):
     group = models.ForeignKey("users.Group", on_delete=models.CASCADE, verbose_name=_("Group"), related_name="members")
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, verbose_name=_("User"),
                              related_name="group_members")
+    is_active = models.BooleanField(_("Is active"), default=True)
 
     class Meta:
         verbose_name = _("Group member")
@@ -247,3 +250,16 @@ class TeacherGlobalLimit(BaseModel):
 
     def __str__(self):
         return f"{self.teacher.username} - {self.course.title}"
+
+class GroupMemberGrade(BaseModel):
+    group_member = models.ForeignKey("users.GroupMember", on_delete=models.CASCADE, verbose_name=_("Group member"), related_name="group_member_grades")
+    lesson = models.ForeignKey("course.Lesson", on_delete=models.CASCADE, verbose_name=_("Lesson"), related_name="lesson_group_member_grades")
+    theoretical_ball = models.IntegerField(_("Theoretical ball"), default=0)
+    practical_ball = models.IntegerField(_("Practical ball"), default=0)  
+
+    class Meta:
+        verbose_name = _("Group member grade")
+        verbose_name_plural = _("Group member grades")
+
+    def __str__(self):
+        return f"{self.group_member.user.username} - {self.lesson.title}"
