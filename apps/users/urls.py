@@ -1,10 +1,9 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .api_endpoints import auth, profile, dashboard
+from .api_endpoints import auth, profile, dashboard, group
 
 app_name = "users"
-
 
 urlpatterns = [
     path("login/", auth.LoginView.as_view(), name="auth-login"),
@@ -40,4 +39,14 @@ urlpatterns = [
         name="profile-change-phone",
     ),
     path("dashboard/", dashboard.UserDashboardView.as_view(), name="user-dashboard"),
+
+    # group urls
+    path("group/", group.GroupListView.as_view(), name="group-list"),
+    path("group/create/", group.GroupCreateView.as_view(), name="group-create"),
+    path("group/member/create/", group.GroupMemberCreateView.as_view(), name="group-member-create"),
+    path("group/member/delete/<int:pk>/", group.GroupMemberDeleteView.as_view(), name="group-member-delete"),
+    path("group/member/list/<int:group_id>/", group.GroupMemberGradeListView.as_view(), name="group-member-list"),
+    path("group/member/grade/create/", group.GroupMemberGradeCreateView.as_view(), name="group-member-grade-create"),
+    path("group/member/grade/update/<int:pk>/", group.GroupMemberGradeUpdateView.as_view(),
+         name="group-member-grade-update"),
 ]

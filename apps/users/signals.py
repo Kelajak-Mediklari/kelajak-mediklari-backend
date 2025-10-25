@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+
+from apps.course.models import UserCourse
 from apps.users.models import Group, GroupMember, TeacherGlobalLimit
 
 
@@ -27,6 +29,14 @@ def update_teacher_global_limit(sender, instance, created, **kwargs):
         course = group.course
 
         try:
+            # create student course
+
+            UserCourse.objects.create(
+                user=instance.user,
+                course=course,
+                finish_date=group.group_end_date,
+            )
+
             teacher_limit = TeacherGlobalLimit.objects.get(
                 teacher=teacher,
                 course=course
@@ -38,3 +48,18 @@ def update_teacher_global_limit(sender, instance, created, **kwargs):
             teacher_limit.save(update_fields=['used', 'remaining'])
         except TeacherGlobalLimit.DoesNotExist:
             pass  # Handle case where limit doesn't exist
+
+
+@receiver(post_delete, sender=Group)
+def delete_group_members(sender, instance, **kwargs):
+    """
+    Delete group members when a group is deleted
+    """
+    GroupMember.objects.filter(group=instance).delete()
+
+@receiver(post_delete, sender=GroupMember)
+def delete_user_course(sender, instance, **kwargs):
+    """
+    Delete user course when a group member is deleted
+    """
+    UserCourse.objects.filter(user=instance.user, course=instance.group.course, is_expired=False).delete()

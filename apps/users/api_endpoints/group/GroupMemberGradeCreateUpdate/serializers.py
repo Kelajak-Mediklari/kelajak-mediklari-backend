@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from apps.users.models import GroupMemberGrade, GroupMember, Lesson
+from apps.users.models import GroupMemberGrade, GroupMember
 
 
 class GroupMemberGradeCreateUpdateSerializer(serializers.ModelSerializer):

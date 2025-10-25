@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -265,6 +266,17 @@ CELERY_TIMEZONE = "Asia/Tashkent"
 
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_BEAT_SCHEDULE = {
+    "check_expired_courses": {
+        "task": "apps.course.tasks.check_expired_courses",
+        "schedule": crontab(hour=1),
+    },
+    "check_expired_groups": {
+        "task": "apps.users.tasks.check_expired_groups",
+        "schedule": crontab(hour=0, minute=0), 
+    },
+}
 
 # RECAPTCHA
 RECAPTCHA_PUBLIC_KEY = env.str(

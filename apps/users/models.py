@@ -251,11 +251,14 @@ class TeacherGlobalLimit(BaseModel):
     def __str__(self):
         return f"{self.teacher.username} - {self.course.title}"
 
+
 class GroupMemberGrade(BaseModel):
-    group_member = models.ForeignKey("users.GroupMember", on_delete=models.CASCADE, verbose_name=_("Group member"), related_name="group_member_grades")
-    lesson = models.ForeignKey("course.Lesson", on_delete=models.CASCADE, verbose_name=_("Lesson"), related_name="lesson_group_member_grades")
+    group_member = models.ForeignKey("users.GroupMember", on_delete=models.CASCADE, verbose_name=_("Group member"),
+                                     related_name="group_member_grades")
+    lesson = models.ForeignKey("course.Lesson", on_delete=models.CASCADE, verbose_name=_("Lesson"),
+                               related_name="lesson_group_member_grades")
     theoretical_ball = models.IntegerField(_("Theoretical ball"), default=0)
-    practical_ball = models.IntegerField(_("Practical ball"), default=0)  
+    practical_ball = models.IntegerField(_("Practical ball"), default=0)
 
     class Meta:
         verbose_name = _("Group member grade")

@@ -26,4 +26,3 @@ class GroupMemberGradeUpdateView(UpdateAPIView):
         )
 
 
-__all__ = ["GroupMemberGradeCreateView", "GroupMemberGradeUpdateView"]

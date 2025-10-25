@@ -9,7 +9,7 @@ from .serializers import GroupListSerializer
 class GroupListView(ListAPIView):
     serializer_class = GroupListSerializer
     permission_classes = [IsTeacher]
-    
+
     def get_queryset(self):
         return Group.objects.filter(
             teacher=self.request.user,
