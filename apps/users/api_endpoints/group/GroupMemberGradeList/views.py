@@ -21,7 +21,7 @@ class GroupMemberGradeListView(ListAPIView):
     pagination_class = GroupMemberGradePagination
 
     def get_queryset(self):
-        group_id = self.kwargs.get('pk')
+        group_id = self.kwargs.get('group_id')
         self.group = Group.objects.filter(
             id=group_id,
             teacher=self.request.user,
@@ -31,16 +31,21 @@ class GroupMemberGradeListView(ListAPIView):
         if not self.group:
             return Group.objects.none()
 
-        # Return lessons with prefetched related data
-        return self.group.course.lessons.filter(is_active=True).prefetch_related(
-            Prefetch(
-                'lesson_group_member_grades',
-                queryset=GroupMemberGrade.objects.filter(
-                    group_member__group=self.group,
-                    group_member__is_active=True
-                ).select_related('group_member__user')
-            )
-        )
+        # Get all group members with their users prefetched
+        self.group_members = list(self.group.members.filter(is_active=True).select_related('user'))
+
+        # Get all grades for this group in one query
+        self.grades_dict = {}
+        grades = GroupMemberGrade.objects.filter(
+            group_member__in=self.group_members
+        ).select_related('group_member', 'group_member__user', 'lesson')
+
+        for grade in grades:
+            key = f"{grade.lesson.id}_{grade.group_member.id}"
+            self.grades_dict[key] = grade
+
+        # Return lessons with minimal prefetch
+        return self.group.course.lessons.filter(is_active=True).order_by('order')
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

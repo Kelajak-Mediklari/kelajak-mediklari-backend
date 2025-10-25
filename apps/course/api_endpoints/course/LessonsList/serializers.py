@@ -128,7 +128,7 @@ class LessonsListSerializer(serializers.ModelSerializer):
 
         # Get the first 3 lessons of the course ordered by id
         first_three_lessons = Lesson.objects.filter(
-            course_id=course_id, 
+            course_id=course_id,
             is_active=True
         ).order_by('id')[:3]
 

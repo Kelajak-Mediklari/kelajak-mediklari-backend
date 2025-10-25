@@ -30,7 +30,7 @@ class GroupMemberCreateSerializer(serializers.ModelSerializer):
                 _("This user is already a member of this group.")
             )
 
-        if GroupMember.objects.filter(user=user, is_active=True, course=group.course).exists():
+        if GroupMember.objects.filter(user=user, is_active=True, group__course=group.course).exists():
             raise ValidationError(
                 _("This user is already a member of this course.")
             )

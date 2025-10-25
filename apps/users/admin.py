@@ -92,5 +92,4 @@ class TeacherGlobalLimitAdmin(admin.ModelAdmin):
         "course__title"
     )
     list_filter = ("course__subject", "created_at")
-    readonly_fields = ("remaining",)
     ordering = ("created_at",)

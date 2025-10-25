@@ -36,6 +36,10 @@ def update_teacher_global_limit(sender, instance, created, **kwargs):
                 course=course,
                 finish_date=group.group_end_date,
             )
+            # assigne teacher
+            if not instance.user.teacher:
+                instance.user.teacher = teacher
+                instance.user.save(update_fields=['teacher'])
 
             teacher_limit = TeacherGlobalLimit.objects.get(
                 teacher=teacher,

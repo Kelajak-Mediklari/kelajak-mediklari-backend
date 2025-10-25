@@ -13,11 +13,11 @@ class GroupCreateSerializer(serializers.ModelSerializer):
             'course',
             'max_member_count',
         ]
-    
+
     def validate(self, attrs):
         teacher = self.context['request'].user
         course = attrs.get('course')
-        
+
         # Check if teacher has remaining limit for this course
         try:
             teacher_limit = TeacherGlobalLimit.objects.get(
@@ -32,9 +32,9 @@ class GroupCreateSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 _("You do not have access to this course. Please purchase the course first.")
             )
-        
+
         return attrs
-    
+
     def create(self, validated_data):
         validated_data['teacher'] = self.context['request'].user
         return super().create(validated_data)

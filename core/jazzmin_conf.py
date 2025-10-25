@@ -60,6 +60,10 @@ JAZZMIN_SETTINGS = {
         # Apps
         "common": "fas fa-layer-group",
         "users": "fas fa-users",
+        "users.group": "fas fa-users",
+        "users.groupmember": "fas fa-user-plus",
+        "users.groupmembergrade": "fas fa-user-graduate",
+        "users.teachergloballimit": "fas fa-user-graduate",
         "course": "fas fa-graduation-cap",
         "payment": "fas fa-credit-card",
         # Common models
