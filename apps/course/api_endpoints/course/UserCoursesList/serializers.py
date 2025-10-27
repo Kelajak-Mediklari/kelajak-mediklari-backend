@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from apps.course.models import UserCourse
 from apps.course.serializers import CourseSerializer
+from apps.users.models import GroupMember
 
 
 class UserCoursesListSerializer(serializers.ModelSerializer):
@@ -9,6 +10,7 @@ class UserCoursesListSerializer(serializers.ModelSerializer):
 
     course = CourseSerializer()
     completed_lessons_count = serializers.SerializerMethodField()
+    is_group_member = serializers.SerializerMethodField()
 
     class Meta:
         model = UserCourse
@@ -21,8 +23,13 @@ class UserCoursesListSerializer(serializers.ModelSerializer):
             "finish_date",
             "is_expired",
             "completed_lessons_count",
+            "is_group_member",
         )
 
     def get_completed_lessons_count(self, obj):
         """Get the count of completed lessons for this user course"""
         return obj.user_lessons.filter(is_completed=True).count()
+    
+    def get_is_group_member(self, obj):
+        """Check if the user is a group member"""
+        return GroupMember.objects.filter(user=self.context['request'].user, group__course=obj.course, is_active=True).exists()

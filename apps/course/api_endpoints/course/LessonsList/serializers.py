@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.course.models import Lesson, UserCourse, UserLesson
+from apps.users.models import GroupMember, GroupMemberGrade
 
 
 class LessonsListSerializer(serializers.ModelSerializer):
@@ -11,6 +12,7 @@ class LessonsListSerializer(serializers.ModelSerializer):
     user_lesson_id = serializers.SerializerMethodField()
     user_course_id = serializers.SerializerMethodField()
     slug = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -24,6 +26,7 @@ class LessonsListSerializer(serializers.ModelSerializer):
             "user_lesson_id",
             "user_course_id",
             "progress_percent",
+            "status",
         )
 
     def get_is_user_lesson_created(self, obj):
@@ -137,3 +140,73 @@ class LessonsListSerializer(serializers.ModelSerializer):
             return obj.slug
         else:
             return None
+
+    def get_status(self, obj):
+        """Return status based on lesson completion for group members"""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+
+        course_id = self.context.get("course_id")
+        if not course_id:
+            return None
+
+        # Check if user is a group member for this course
+        group_member = self.context.get("group_member")
+        if not group_member:
+            return None
+
+        # For group members, check lesson status based on completion
+        return self._check_lesson_status_for_group_member(obj, group_member, course_id)
+
+    def _check_lesson_status_for_group_member(self, lesson, group_member, course_id):
+        """Check lesson status for group member based on completion pattern"""
+        # First lesson is always open
+        if lesson.order == 1:
+            return "open"
+        
+        # Get all lessons ordered by their order
+        all_lessons = Lesson.objects.filter(
+            course_id=course_id,
+            is_active=True
+        ).order_by('order')
+        
+        # Find the current lesson's position
+        current_position = lesson.order
+        
+        # Check completed lessons (lessons with passing grades)
+        completed_lessons = []
+        for check_lesson in all_lessons:
+            if check_lesson.order < current_position:
+                try:
+                    grade = GroupMemberGrade.objects.get(
+                        group_member=group_member,
+                        lesson=check_lesson
+                    )
+                    
+                    # Check if both theoretical and practical grades meet passing requirements
+                    theoretical_passed = grade.theoretical_ball >= check_lesson.theoretical_pass_ball
+                    practical_passed = grade.practical_ball >= check_lesson.practical_pass_ball
+                    
+                    if theoretical_passed and practical_passed:
+                        completed_lessons.append(check_lesson.order)
+                        
+                except GroupMemberGrade.DoesNotExist:
+                    pass
+        
+        # Determine status based on completion pattern
+        if not completed_lessons:
+            # No lessons completed yet
+            if current_position <= 3:
+                return "lock"  # First 3 lessons are "lock" by default
+            else:
+                return "loock"  # Beyond first 3 are "loock"
+        else:
+            # Some lessons are completed
+            max_completed = max(completed_lessons)
+            
+            # If current lesson is within the next 2 lessons after the last completed lesson
+            if current_position <= max_completed + 2:
+                return "lock"
+            else:
+                return "loock"

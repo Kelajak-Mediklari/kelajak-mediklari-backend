@@ -7,6 +7,7 @@ from apps.course.api_endpoints.course.LessonsList.serializers import (
     LessonsListSerializer,
 )
 from apps.course.models import Course, Lesson, UserCourse, UserLesson
+from apps.users.models import GroupMember
 
 
 class LessonsListAPIView(generics.ListAPIView):
@@ -40,7 +41,7 @@ class LessonsListAPIView(generics.ListAPIView):
         return queryset
 
     def get_serializer_context(self):
-        """Add course_id and user_course to serializer context"""
+        """Add course_id, user_course, and group_member to serializer context"""
         context = super().get_serializer_context()
         course_id = self.kwargs.get(self.lookup_field)
         context["course_id"] = course_id
@@ -54,8 +55,20 @@ class LessonsListAPIView(generics.ListAPIView):
                 context["user_course"] = user_course
             except UserCourse.DoesNotExist:
                 context["user_course"] = None
+                
+            # Add group_member if user is a group member for this course
+            try:
+                group_member = GroupMember.objects.get(
+                    user=self.request.user,
+                    group__course_id=course_id,
+                    is_active=True
+                )
+                context["group_member"] = group_member
+            except GroupMember.DoesNotExist:
+                context["group_member"] = None
         else:
             context["user_course"] = None
+            context["group_member"] = None
 
         return context
 

@@ -31,7 +31,7 @@ class DiscountApplyView(GenericAPIView):
                 course = Course.objects.get(id=course_id, is_active=True)
             except Course.DoesNotExist:
                 return Response({'error': 'Course not found, inactive, or deleted'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             original_price = course.price  # Keep as Decimal
 
             # Initialize discount tracking
@@ -65,7 +65,7 @@ class DiscountApplyView(GenericAPIView):
             from decimal import Decimal
             total_discount = promo_discount + coin_discount
             final_price = original_price - Decimal(str(total_discount))
-            
+
             # Ensure final price is not negative
             if final_price < 0:
                 final_price = Decimal('0')
