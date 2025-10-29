@@ -37,18 +37,9 @@ Retrieves a paginated list of all active lesson parts for a specific lesson. The
       "award_coin": 10,
       "award_point": 5,
       "test_id": 2,
-      "galleries": [
-        {
-          "id": 1,
-          "image": "/media/galleries/image1.jpg"
-        }
-      ],
-      "attached_files": [
-        {
-          "id": 1,
-          "file": "/media/files/document.pdf"
-        }
-      ]
+      "test_type": "regular_test",
+      "user_test_id": 123,
+      "is_locked": false
     },
     {
       "id": 2,
@@ -58,8 +49,9 @@ Retrieves a paginated list of all active lesson parts for a specific lesson. The
       "award_coin": 15,
       "award_point": 8,
       "test_id": null,
-      "galleries": [],
-      "attached_files": []
+      "test_type": null,
+      "user_test_id": null,
+      "is_locked": true
     }
   ]
 }
@@ -91,8 +83,9 @@ Retrieves a paginated list of all active lesson parts for a specific lesson. The
 - `award_coin`: Number of coins awarded upon completion
 - `award_point`: Number of points awarded upon completion
 - `test_id`: ID of associated test (null if no test is associated)
-- `galleries`: Array of associated gallery images
-- `attached_files`: Array of associated files
+- `test_type`: Type of the associated test (null if no test is associated)
+- `user_test_id`: ID of user's test attempt (null if user hasn't taken the test)
+- `is_locked`: Boolean indicating if this lesson part is locked for the current user
 
 ### Gallery Fields
 - `id`: Unique identifier for the gallery item
@@ -126,5 +119,11 @@ curl -H "Authorization: Bearer your_token_here" \
 - Only active lesson parts (`is_active=True`) are returned
 - Only active lessons (`is_active=True`) are accessible
 - Results are automatically ordered by the `order` field
-- The API includes related data (galleries, attached_files) to minimize additional requests
+- The API includes related data to minimize additional requests
 - Search functionality works on both title and description fields
+- **Lesson Part Locking Logic:**
+  - The first lesson part (order=1) is always unlocked
+  - Subsequent lesson parts are locked until the previous lesson part is completed
+  - Users must complete lesson parts in sequential order
+  - Unauthenticated users see all parts as locked except the first one
+  - Users not enrolled in the course see all parts as locked except the first one
