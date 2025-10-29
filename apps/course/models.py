@@ -77,6 +77,9 @@ class Course(BaseModel):
     description = models.TextField(_("Description"), null=True, blank=True)
     slug = models.SlugField(_("Slug"), unique=True, blank=True)
     cover = models.ImageField(_("Cover"), upload_to="courses/", null=True, blank=True)
+    video_preview = models.FileField(
+        _("Video Preview"), upload_to="courses/videos/", null=True, blank=True
+    )
     subject = models.ForeignKey(
         "course.Subject", on_delete=models.CASCADE, related_name="courses"
     )
@@ -91,7 +94,9 @@ class Course(BaseModel):
     is_main_course = models.BooleanField(_("Is Main Course"), default=False)
     is_active = models.BooleanField(_("Is Active"), default=True)
     is_can_pay_with_coin = models.BooleanField(_("Is Can Pay With Coin"), default=False)
-    is_can_pay_with_referral = models.BooleanField(_("Is Can Pay With Referral"), default=False)
+    is_can_pay_with_referral = models.BooleanField(
+        _("Is Can Pay With Referral"), default=False
+    )
 
     class Meta:
         verbose_name = _("Course")
@@ -379,7 +384,9 @@ class UserCourse(BaseModel):
         total_points = 0
 
         for user_lesson in self.user_lessons.filter(is_completed=True):
-            for user_lesson_part in user_lesson.user_lesson_parts.filter(is_completed=True):
+            for user_lesson_part in user_lesson.user_lesson_parts.filter(
+                is_completed=True
+            ):
                 total_coins += user_lesson_part.lesson_part.award_coin
                 total_points += user_lesson_part.lesson_part.award_point
 
@@ -399,7 +406,7 @@ class UserCourse(BaseModel):
         # Update course totals
         self.coins_earned = total_coins
         self.points_earned = total_points
-        self.save(update_fields=['coins_earned', 'points_earned'])
+        self.save(update_fields=["coins_earned", "points_earned"])
 
     def get_next_lesson(self):
         """Get the next uncompleted lesson in the course"""
@@ -418,17 +425,13 @@ class UserCourse(BaseModel):
         """Get total coins and points earned by a user across all courses"""
         from django.db.models import Sum
 
-        total_earnings = cls.objects.filter(
-            user=user,
-            is_completed=True
-        ).aggregate(
-            total_coins=Sum('coins_earned'),
-            total_points=Sum('points_earned')
+        total_earnings = cls.objects.filter(user=user, is_completed=True).aggregate(
+            total_coins=Sum("coins_earned"), total_points=Sum("points_earned")
         )
 
         return {
-            'total_coins': total_earnings['total_coins'] or 0,
-            'total_points': total_earnings['total_points'] or 0
+            "total_coins": total_earnings["total_coins"] or 0,
+            "total_points": total_earnings["total_points"] or 0,
         }
 
 
@@ -739,8 +742,8 @@ class UserAnswer(BaseModel):
             if self.book_answer and self.question.book_questions:
                 # Handle new book_questions structure
                 if (
-                        isinstance(self.question.book_questions, list)
-                        and len(self.question.book_questions) > 0
+                    isinstance(self.question.book_questions, list)
+                    and len(self.question.book_questions) > 0
                 ):
                     # New structure: [{'questions_count': 10, 'questions': [...]}]
                     book_data = self.question.book_questions[0]

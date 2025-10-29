@@ -1,14 +1,12 @@
 from rest_framework import serializers
-from apps.common.api_endpoints.common.file_serializers import AttachedFileSerializer
 
-from apps.course.models import Course, File, Gallery, Subject
+from apps.course.models import Course, Gallery, Subject
 
 
 class GallerySerializer(serializers.ModelSerializer):
     class Meta:
         model = Gallery
         fields = ("id", "image")
-
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -29,6 +27,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "title",
             "slug",
             "cover",
+            "video_preview",
             "subject",
             "learning_outcomes",
             "duration",

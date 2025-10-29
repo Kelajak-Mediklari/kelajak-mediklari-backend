@@ -16,6 +16,7 @@ class CourseListSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "cover",
+            "video_preview",
             "subject",
             "learning_outcomes",
             "duration",
