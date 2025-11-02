@@ -56,14 +56,14 @@ class LessonPartListSerializer(serializers.ModelSerializer):
         - First lesson part (order=1) is always unlocked
         - Other lesson parts are locked until the previous lesson part is completed
         """
-        # Get the user from the request context
-        request = self.context.get("request")
-        if not request or not request.user.is_authenticated:
-            return True  # Lock for unauthenticated users
-
         # First lesson part is always unlocked
         if obj.order == 1:
             return False
+
+        # Get the user from the request context
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return True
 
         # Get the previous lesson part (by order)
         previous_part = (
@@ -75,61 +75,16 @@ class LessonPartListSerializer(serializers.ModelSerializer):
         )
 
         if not previous_part:
-            # If no previous part found, unlock this part
             return False
 
         # Check if user has completed the previous lesson part
-        try:
-            # First, check if user is enrolled in the course
-            from apps.course.models import UserCourse, UserLesson
+        previous_user_lesson_part = UserLessonPart.objects.filter(
+            user_lesson__user_course__user=request.user,
+            user_lesson__lesson=obj.lesson,
+            lesson_part=previous_part,
+            is_completed=True,
+        ).exists()
 
-            user_course = UserCourse.objects.filter(
-                user=request.user, course=obj.lesson.course
-            ).first()
-
-            if not user_course:
-                # User hasn't enrolled in the course, so lock all parts except first
-                return True
-
-            # Try to use prefetched data if available
-            if hasattr(obj, "filtered_user_lesson_parts"):
-                # Use prefetched data
-                user_lesson_parts = obj.filtered_user_lesson_parts
-                previous_user_lesson_part = None
-
-                for ulp in user_lesson_parts:
-                    if ulp.lesson_part_id == previous_part.id:
-                        previous_user_lesson_part = ulp
-                        break
-
-                # If previous part doesn't exist in user progress or isn't completed, lock this part
-                if (
-                    not previous_user_lesson_part
-                    or not previous_user_lesson_part.is_completed
-                ):
-                    return True
-
-                return False
-            else:
-                # Fallback to database queries if prefetch not available
-                user_lesson, _ = UserLesson.objects.get_or_create(
-                    user_course=user_course, lesson=obj.lesson
-                )
-
-                # Check if previous lesson part is completed
-                previous_user_lesson_part = UserLessonPart.objects.filter(
-                    user_lesson=user_lesson, lesson_part=previous_part
-                ).first()
-
-                # If previous part doesn't exist in user progress or isn't completed, lock this part
-                if (
-                    not previous_user_lesson_part
-                    or not previous_user_lesson_part.is_completed
-                ):
-                    return True
-
-                return False
-
-        except Exception:
-            # In case of any error, lock the lesson part for safety
-            return True
+        # If previous part is completed, unlock this part (return False)
+        # If previous part is not completed, lock this part (return True)
+        return not previous_user_lesson_part
