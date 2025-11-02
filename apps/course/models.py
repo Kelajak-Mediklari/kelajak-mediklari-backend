@@ -77,9 +77,7 @@ class Course(BaseModel):
     description = models.TextField(_("Description"), null=True, blank=True)
     slug = models.SlugField(_("Slug"), unique=True, blank=True)
     cover = models.ImageField(_("Cover"), upload_to="courses/", null=True, blank=True)
-    video_preview = models.FileField(
-        _("Video Preview"), upload_to="courses/videos/", null=True, blank=True
-    )
+    video_preview = models.URLField(_("Video Preview"), null=True, blank=True)
     subject = models.ForeignKey(
         "course.Subject", on_delete=models.CASCADE, related_name="courses"
     )
