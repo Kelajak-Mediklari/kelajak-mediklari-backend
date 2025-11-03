@@ -357,5 +357,11 @@ CKEDITOR_CONFIGS = {
     },
 }
 
+# 1000 GB in bytes
+GB = 1024 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1000 * GB  # 1,073,741,824,000 bytes
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1000 * GB  # same here
+
+
 # Jazzmin admin branding
 from core.jazzmin_conf import JAZZMIN_SETTINGS, JAZZMIN_UI_TWEAKS  # noqa: E402,F401
