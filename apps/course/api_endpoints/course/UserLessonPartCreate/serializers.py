@@ -30,6 +30,8 @@ class UserLessonPartCreateSerializer(serializers.ModelSerializer):
             user_lesson = UserLesson.objects.get(
                 id=value, user_course__user=request.user
             )
+            # Store user_lesson in context for later use
+            self.context["user_lesson"] = user_lesson
         except UserLesson.DoesNotExist:
             raise serializers.ValidationError(
                 "User lesson not found or does not belong to the current user."
@@ -48,6 +50,7 @@ class UserLessonPartCreateSerializer(serializers.ModelSerializer):
         """Cross-field validation"""
         user_lesson_id = attrs.get("user_lesson_id")
         lesson_part_id = attrs.get("lesson_part_id")
+        request = self.context.get("request")
 
         if user_lesson_id and lesson_part_id:
             try:
@@ -66,6 +69,20 @@ class UserLessonPartCreateSerializer(serializers.ModelSerializer):
                         "Test type lesson parts cannot be completed through this API. "
                         "Use the dedicated test completion API instead."
                     )
+
+                # Check if this is a free trial and validate lesson access
+                if user_lesson.user_course.is_free_trial:
+                    # Get first 3 lessons of the course
+                    first_three_lessons = list(
+                        user_lesson.lesson.course.lessons.filter(
+                            is_active=True
+                        ).order_by("order")[:3]
+                    )
+
+                    if user_lesson.lesson not in first_three_lessons:
+                        raise serializers.ValidationError(
+                            "This lesson is not available for free trial. Please purchase the course to access it."
+                        )
 
                 # Check if UserLessonPart already exists
                 if UserLessonPart.objects.filter(

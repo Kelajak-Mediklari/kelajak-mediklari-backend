@@ -62,10 +62,42 @@ class TestStartAPIView(generics.CreateAPIView):
             # Find related lesson part and create/update UserLessonPart
             lesson_part = LessonPart.objects.filter(test=test, is_active=True).first()
             if lesson_part:
-                # Get or create UserCourse
-                user_course, created = UserCourse.objects.get_or_create(
-                    user=user, course=lesson_part.lesson.course
+                from apps.course.models import Lesson
+
+                # Check if this lesson is in the first 3 free lessons
+                first_three_lessons = list(
+                    Lesson.objects.filter(
+                        course=lesson_part.lesson.course, is_active=True
+                    ).order_by("order")[:3]
                 )
+
+                is_free_lesson = lesson_part.lesson in first_three_lessons
+
+                # Get or create UserCourse
+                # First try to get a paid UserCourse
+                user_course = UserCourse.objects.filter(
+                    user=user, course=lesson_part.lesson.course, is_free_trial=False
+                ).first()
+
+                if not user_course:
+                    # User hasn't paid, check if it's a free lesson
+                    if is_free_lesson:
+                        # Create or get free trial UserCourse
+                        user_course, created = UserCourse.objects.get_or_create(
+                            user=user,
+                            course=lesson_part.lesson.course,
+                            is_free_trial=True,
+                            defaults={"is_free_trial": True},
+                        )
+                    else:
+                        # Not a free lesson and user hasn't paid
+                        # This shouldn't happen if access control is working properly
+                        # But we'll create a paid UserCourse anyway (maybe payment was processed elsewhere)
+                        user_course, created = UserCourse.objects.get_or_create(
+                            user=user,
+                            course=lesson_part.lesson.course,
+                            defaults={"is_free_trial": False},
+                        )
 
                 # Get or create UserLesson
                 user_lesson, created = UserLesson.objects.get_or_create(

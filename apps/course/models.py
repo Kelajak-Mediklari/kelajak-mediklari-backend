@@ -357,6 +357,11 @@ class UserCourse(BaseModel):
     start_date = models.DateTimeField(_("Start Date"), auto_now_add=True)
     finish_date = models.DateTimeField(_("Finish Date"), null=True, blank=True)
     is_expired = models.BooleanField(_("Is Expired"), default=False)
+    is_free_trial = models.BooleanField(
+        _("Is Free Trial"),
+        default=False,
+        help_text=_("True if user is accessing free lessons without payment"),
+    )
 
     # Additional tracking fields
     coins_earned = models.IntegerField(_("Coins Earned"), default=0)
