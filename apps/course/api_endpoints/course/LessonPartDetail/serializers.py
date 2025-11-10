@@ -10,6 +10,7 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
     attached_files = AttachedFileSerializer(many=True, read_only=True)
     is_user_lesson_part_completed = serializers.SerializerMethodField()
     user_lesson_id = serializers.SerializerMethodField()
+    hls_video_url = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonPart
@@ -18,13 +19,27 @@ class LessonPartDetailSerializer(serializers.ModelSerializer):
             "title",
             "content",
             "type",
-            "video_url",
+            "hls_video_url",
+            "hls_processing_status",
             "test",
             "galleries",
             "attached_files",
             "is_user_lesson_part_completed",
             "user_lesson_id",
         )
+
+    def get_hls_video_url(self, obj):
+        """
+        Return the full HLS video URL if conversion is completed,
+        otherwise return None
+        """
+        if obj.hls_processing_status == "completed" and obj.hls_video_url:
+            request = self.context.get("request")
+            if request:
+                # Return absolute URL
+                return request.build_absolute_uri(obj.hls_video_url)
+            return obj.hls_video_url
+        return None
 
     def get_is_user_lesson_part_completed(self, obj):
         """Check if the current user has completed this lesson part"""

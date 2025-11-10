@@ -1,7 +1,7 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from .models import UserLessonPart
+from .models import LessonPart, UserLessonPart
 
 
 @receiver(post_save, sender=UserLessonPart)
@@ -18,12 +18,46 @@ def update_user_coins_points_on_completion(sender, instance, created, **kwargs):
             # Get the user course to access the user
             user_course = instance.user_lesson.user_course
             user = user_course.user
-            
+
             # Award coins and points (always, even if 0)
             user.add_coins(instance.lesson_part.award_coin)
             user.add_points(instance.lesson_part.award_point)
-            
+
             # Update user course totals as well
             user_course.coins_earned += instance.lesson_part.award_coin
             user_course.points_earned += instance.lesson_part.award_point
-            user_course.save(update_fields=['coins_earned', 'points_earned'])
+            user_course.save(update_fields=["coins_earned", "points_earned"])
+
+
+@receiver(post_save, sender=LessonPart)
+def trigger_hls_conversion(sender, instance, created, **kwargs):
+    """
+    Signal to trigger HLS video conversion when a video is uploaded to a LessonPart.
+    This will run in the background using Celery.
+    """
+    from .tasks import convert_video_to_hls
+
+    # Check if video has changed (flag set by pre_save signal)
+    video_changed = getattr(instance, "_video_changed", False)
+
+    if video_changed and instance.video:
+        # Trigger HLS conversion in background
+        convert_video_to_hls.delay(instance.id)
+
+
+@receiver(pre_save, sender=LessonPart)
+def check_video_change(sender, instance, **kwargs):
+    """
+    Pre-save signal to check if video field has changed.
+    Sets a flag on the instance to be used in post_save signal.
+    """
+    if instance.pk:
+        try:
+            old_instance = LessonPart.objects.get(pk=instance.pk)
+            # Set a flag if video has changed
+            instance._video_changed = old_instance.video != instance.video
+        except LessonPart.DoesNotExist:
+            instance._video_changed = False
+    else:
+        # New instance
+        instance._video_changed = bool(instance.video)

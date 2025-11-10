@@ -67,9 +67,35 @@ class LessonAdmin(admin.ModelAdmin):
 
 @admin.register(LessonPart)
 class LessonPartAdmin(admin.ModelAdmin):
-    list_display = ("title", "lesson", "type", "is_active")
+    list_display = ("title", "lesson", "type", "hls_processing_status", "is_active")
     search_fields = ("title",)
-    list_filter = ("is_active", "lesson", "type")
+    list_filter = ("is_active", "lesson", "type", "hls_processing_status")
+    readonly_fields = ("hls_video_url", "hls_processing_status")
+
+    fieldsets = (
+        (
+            "Basic Information",
+            {"fields": ("lesson", "title", "content", "type", "order")},
+        ),
+        (
+            "Video",
+            {
+                "fields": ("video", "hls_video_url", "hls_processing_status"),
+                "description": "Upload a video file. It will be automatically converted to HLS format in the background.",
+            },
+        ),
+        ("Test", {"fields": ("test",)}),
+        ("Rewards", {"fields": ("award_coin", "award_point")}),
+        (
+            "Media & Files",
+            {"fields": ("galleries", "attached_files"), "classes": ("collapse",)},
+        ),
+        ("Settings", {"fields": ("is_active",)}),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        """Make HLS fields readonly as they are auto-generated"""
+        return self.readonly_fields
 
 
 @admin.register(Test)

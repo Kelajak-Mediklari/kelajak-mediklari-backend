@@ -182,7 +182,25 @@ class LessonPart(BaseModel):
     )
 
     # Video related
-    video_url = models.URLField(_("Video URL"), null=True, blank=True)
+    video = models.FileField(
+        _("Video"), upload_to="lesson_videos/", null=True, blank=True
+    )
+    hls_video_url = models.URLField(
+        _("HLS Video URL"), null=True, blank=True, editable=False
+    )
+    hls_processing_status = models.CharField(
+        _("HLS Processing Status"),
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("processing", "Processing"),
+            ("completed", "Completed"),
+            ("failed", "Failed"),
+        ],
+        default="pending",
+        null=True,
+        blank=True,
+    )
 
     # Test related
     test = models.ForeignKey(
