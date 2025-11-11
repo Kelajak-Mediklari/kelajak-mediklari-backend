@@ -143,6 +143,7 @@ class UserCourseAdmin(admin.ModelAdmin):
         "course",
         "progress_percent",
         "is_completed",
+        "is_free_trial",
         "start_date",
         "finish_date",
     )
