@@ -243,6 +243,42 @@ STATICFILES_DIRS = (BASE_DIR / "staticfiles",)
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# CORS CONFIGURATION for HLS Streaming
+CORS_ALLOW_ALL_ORIGINS = True  # Set to False in production and use CORS_ALLOWED_ORIGINS
+CORS_ALLOW_CREDENTIALS = True
+
+# Headers needed for HLS video streaming
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "range",  # Required for video streaming
+]
+
+# Expose headers needed for HLS streaming
+CORS_EXPOSE_HEADERS = [
+    "content-range",
+    "accept-ranges",
+    "content-length",
+    "content-type",
+]
+
+# Allow methods for CORS
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CACHES
