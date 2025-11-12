@@ -548,6 +548,11 @@ class UserLessonPart(BaseModel):
     is_completed = models.BooleanField(_("Is Completed"), default=False)
     completion_date = models.DateTimeField(_("Completion Date"), null=True, blank=True)
     start_date = models.DateTimeField(_("Start Date"), auto_now_add=True)
+    awards_given = models.BooleanField(
+        _("Awards Given"),
+        default=False,
+        help_text=_("True if coins/points were awarded for completing this part"),
+    )
 
     class Meta:
         verbose_name = _("User Lesson Part")
@@ -565,22 +570,63 @@ class UserLessonPart(BaseModel):
                 _("Lesson part must belong to the same lesson as user lesson")
             )
 
-    def mark_completed(self):
-        """Mark this lesson part as completed and update related progress"""
+    def mark_completed(self, give_awards=True):
+        """
+        Mark this lesson part as completed and update related progress.
+
+        Args:
+            give_awards (bool): If True and awards haven't been given yet, award coins/points.
+                               If False, mark as completed but don't give awards.
+        """
         if not self.is_completed:
             self.is_completed = True
             self.completion_date = timezone.now()
 
-            # Award coins and points to user course
-            user_course = self.user_lesson.user_course
-            user_course.coins_earned += self.lesson_part.award_coin
-            user_course.points_earned += self.lesson_part.award_point
-            user_course.save()
+            # Award coins and points only if requested and not already given
+            if give_awards and not self.awards_given:
+                user_course = self.user_lesson.user_course
+                user_course.coins_earned += self.lesson_part.award_coin
+                user_course.points_earned += self.lesson_part.award_point
+                user_course.save()
 
-            # Update user's actual coin and point balance (always, even if 0)
-            user = user_course.user
-            user.add_coins(self.lesson_part.award_coin)
-            user.add_points(self.lesson_part.award_point)
+                # Update user's actual coin and point balance (always, even if 0)
+                user = user_course.user
+                user.add_coins(self.lesson_part.award_coin)
+                user.add_points(self.lesson_part.award_point)
+
+                self.awards_given = True
+
+            self.save()
+
+            # Update lesson progress
+            self.user_lesson.update_progress()
+
+    def mark_completed_with_partial_awards(self, coins, points):
+        """
+        Mark this lesson part as completed with partial awards based on test performance.
+        Used when user completes a test with partial correct answers.
+
+        Args:
+            coins (int): Partial coins to award based on percentage of correct answers
+            points (int): Partial points to award based on percentage of correct answers
+        """
+        if not self.is_completed:
+            self.is_completed = True
+            self.completion_date = timezone.now()
+
+            # Award partial coins and points only if not already given
+            if not self.awards_given:
+                user_course = self.user_lesson.user_course
+                user_course.coins_earned += coins
+                user_course.points_earned += points
+                user_course.save()
+
+                # Update user's actual coin and point balance
+                user = user_course.user
+                user.add_coins(coins)
+                user.add_points(points)
+
+                self.awards_given = True
 
             self.save()
 

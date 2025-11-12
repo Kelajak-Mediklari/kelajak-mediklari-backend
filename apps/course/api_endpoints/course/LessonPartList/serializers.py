@@ -55,6 +55,7 @@ class LessonPartListSerializer(serializers.ModelSerializer):
         Logic:
         - First lesson part (order=1) is always unlocked
         - Other lesson parts are locked until the previous lesson part is completed
+        - If previous part has a test and user attempted it (even if failed), unlock next part
         """
         # First lesson part is always unlocked
         if obj.order == 1:
@@ -85,6 +86,22 @@ class LessonPartListSerializer(serializers.ModelSerializer):
             is_completed=True,
         ).exists()
 
-        # If previous part is completed, unlock this part (return False)
-        # If previous part is not completed, lock this part (return True)
-        return not previous_user_lesson_part
+        # If previous part is completed, unlock this part
+        if previous_user_lesson_part:
+            return False
+
+        # If previous part has a test, check if user has attempted it
+        # Even if they failed, they can move to the next part after attempting
+        if previous_part.test:
+            has_attempted_test = UserTest.objects.filter(
+                user=request.user,
+                test=previous_part.test,
+                is_submitted=True,
+            ).exists()
+
+            # If user attempted the test, unlock next part
+            if has_attempted_test:
+                return False
+
+        # Otherwise, keep it locked
+        return True

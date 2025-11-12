@@ -34,19 +34,41 @@ class FinishTestAPIView(generics.UpdateAPIView):
             # Submit the test (this will calculate scores)
             user_test.submit_test()
 
-            # Mark related UserLessonPart as completed if test is passed
-            if user_test.is_passed:
-                lesson_part = LessonPart.objects.filter(
-                    test=user_test.test, is_active=True
+            # Find related lesson part
+            lesson_part = LessonPart.objects.filter(
+                test=user_test.test, is_active=True
+            ).first()
+
+            if lesson_part:
+                user_lesson_part = UserLessonPart.objects.filter(
+                    user_lesson__user_course__user=user, lesson_part=lesson_part
                 ).first()
 
-                if lesson_part:
-                    user_lesson_part = UserLessonPart.objects.filter(
-                        user_lesson__user_course__user=user, lesson_part=lesson_part
-                    ).first()
+                if user_lesson_part and not user_lesson_part.is_completed:
+                    # Always mark as completed and give partial awards on first attempt
+                    if user_test.attempt_number == 1:
+                        # Calculate percentage of correct answers
+                        if user_test.total_questions > 0:
+                            percentage = (
+                                user_test.correct_answers / user_test.total_questions
+                            )
+                        else:
+                            percentage = 0
 
-                    if user_lesson_part and not user_lesson_part.is_completed:
-                        user_lesson_part.mark_completed()
+                        # Calculate partial coins and points based on performance
+                        partial_coins = int(lesson_part.award_coin * percentage)
+                        partial_points = int(lesson_part.award_point * percentage)
+
+                        # Mark as completed with partial awards
+                        user_lesson_part.mark_completed_with_partial_awards(
+                            coins=partial_coins, points=partial_points
+                        )
+                    else:
+                        # Subsequent attempts: mark completed but no awards
+                        user_lesson_part.mark_completed(give_awards=False)
+                elif user_lesson_part and user_lesson_part.is_completed:
+                    # User is retrying - no additional awards
+                    pass
 
             serializer = self.get_serializer(user_test)
             return Response(serializer.data, status=status.HTTP_200_OK)
