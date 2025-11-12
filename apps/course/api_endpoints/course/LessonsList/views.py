@@ -22,9 +22,11 @@ class LessonsListAPIView(generics.ListAPIView):
         course = get_object_or_404(Course, id=course_id, is_active=True)
 
         # Base queryset with parts count annotation
-        queryset = Lesson.objects.filter(course=course, is_active=True).annotate(
-            parts_count=Count("parts", filter=Q(parts__is_active=True))
-        ).order_by("order")
+        queryset = (
+            Lesson.objects.filter(course=course, is_active=True)
+            .annotate(parts_count=Count("parts", filter=Q(parts__is_active=True)))
+            .order_by("order")
+        )
 
         # Prefetch user lessons for the current user and course if authenticated
         if self.request.user.is_authenticated:
@@ -37,6 +39,16 @@ class LessonsListAPIView(generics.ListAPIView):
                 to_attr="filtered_user_lessons",
             )
             queryset = queryset.prefetch_related(user_lessons_prefetch)
+
+            # Limit to first 3 lessons if user is on free trial
+            try:
+                user_course = UserCourse.objects.get(
+                    user=self.request.user, course_id=course_id
+                )
+                if user_course.is_free_trial:
+                    queryset = queryset[:3]
+            except UserCourse.DoesNotExist:
+                pass
 
         return queryset
 
@@ -55,13 +67,11 @@ class LessonsListAPIView(generics.ListAPIView):
                 context["user_course"] = user_course
             except UserCourse.DoesNotExist:
                 context["user_course"] = None
-                
+
             # Add group_member if user is a group member for this course
             try:
                 group_member = GroupMember.objects.get(
-                    user=self.request.user,
-                    group__course_id=course_id,
-                    is_active=True
+                    user=self.request.user, group__course_id=course_id, is_active=True
                 )
                 context["group_member"] = group_member
             except GroupMember.DoesNotExist:
