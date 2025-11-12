@@ -3,7 +3,7 @@ from rest_framework import filters, generics
 from rest_framework.permissions import AllowAny
 
 from apps.course.api_endpoints.course.CourseList.serializers import CourseListSerializer
-from apps.course.models import Course
+from apps.course.models import Course, UserCourse
 
 
 class CourseListAPIView(generics.ListAPIView):
@@ -15,11 +15,16 @@ class CourseListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         subject_id = self.kwargs.get("subject_id")
-        return (
-            Course.objects.filter(is_active=True, subject_id=subject_id)
-            .select_related("subject")
-            .prefetch_related("lessons")
-        )
+        queryset = Course.objects.filter(is_active=True, subject_id=subject_id)
+
+        # Exclude courses that the user is already enrolled in
+        if self.request.user.is_authenticated:
+            user_course_ids = UserCourse.objects.filter(
+                user=self.request.user
+            ).values_list("course_id", flat=True)
+            queryset = queryset.exclude(id__in=user_course_ids)
+
+        return queryset.select_related("subject").prefetch_related("lessons")
 
 
 __all__ = ["CourseListAPIView"]
