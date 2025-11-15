@@ -406,7 +406,7 @@ class UserCourse(BaseModel):
 
         for user_lesson in self.user_lessons.filter(is_completed=True):
             for user_lesson_part in user_lesson.user_lesson_parts.filter(
-                is_completed=True
+                    is_completed=True
             ):
                 total_coins += user_lesson_part.lesson_part.award_coin
                 total_points += user_lesson_part.lesson_part.award_point
@@ -809,8 +809,8 @@ class UserAnswer(BaseModel):
             if self.book_answer and self.question.book_questions:
                 # Handle new book_questions structure
                 if (
-                    isinstance(self.question.book_questions, list)
-                    and len(self.question.book_questions) > 0
+                        isinstance(self.question.book_questions, list)
+                        and len(self.question.book_questions) > 0
                 ):
                     # New structure: [{'questions_count': 10, 'questions': [...]}]
                     book_data = self.question.book_questions[0]
