@@ -54,6 +54,7 @@ class LessonPartListSerializer(serializers.ModelSerializer):
         Determine if this lesson part is locked for the current user.
         Logic:
         - First lesson part (order=1) is always unlocked
+        - If current part is a test and user has attempted it, it's unlocked (can retry)
         - Other lesson parts are locked until the previous lesson part is completed
         - If previous part has a test and user attempted it (even if failed), unlock next part
         """
@@ -65,6 +66,19 @@ class LessonPartListSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return True
+
+        # If this part itself has a test and user has attempted it, it's unlocked
+        # This allows users to retry tests multiple times
+        if obj.test:
+            has_attempted_current_test = UserTest.objects.filter(
+                user=request.user,
+                test=obj.test,
+                is_submitted=True,
+            ).exists()
+
+            if has_attempted_current_test:
+                # User has attempted this test, so it's unlocked for retries
+                return False
 
         # Get the previous lesson part (by order)
         previous_part = (
@@ -100,6 +114,7 @@ class LessonPartListSerializer(serializers.ModelSerializer):
             ).exists()
 
             # If user attempted the test, unlock next part
+            # This means the previous part is considered "completed" for unlocking purposes
             if has_attempted_test:
                 return False
 
