@@ -31,7 +31,12 @@ class CourseSerializer(serializers.ModelSerializer):
             "subject",
             "learning_outcomes",
             "duration",
+            "duration_months",
+            "price",
+            "is_unlimited",
             "is_main_course",
+            "is_can_pay_with_coin",
+            "is_can_pay_with_referral",
             "lessons_count",
         )
 
