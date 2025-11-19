@@ -25,7 +25,7 @@ class UserTestResultsAPIView(generics.RetrieveAPIView):
         # Get the user test, ensuring it belongs to the authenticated user
         return get_object_or_404(
             UserTest.objects.select_related("test", "user").prefetch_related(
-                "test__questions", "user_answers"
+                "test__questions__test", "user_answers__question__test"
             ),
             id=user_test_id,
             user=user,

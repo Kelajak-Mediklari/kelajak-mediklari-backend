@@ -227,7 +227,7 @@ class Question(BaseModel):
     test = models.ForeignKey(
         "course.Test", on_delete=models.CASCADE, related_name="questions"
     )
-    question_text = models.TextField(_("Question Text"))
+    question_text = HTMLField(_("Question text"))
     instructions = models.TextField(
         _("Instructions"),
         help_text="Special instructions for matching questions or other question types",
@@ -281,8 +281,8 @@ class MatchingPair(BaseModel):
         null=True,
         blank=True,
     )
-    left_item = models.TextField(_("Left Item"))  # Question side
-    right_item = models.TextField(_("Right Item"))  # Answer side
+    left_item = HTMLField(_("Left Item"))  # Question side
+    right_item = HTMLField(_("Right Item"))  # Answer side
     order = models.IntegerField(_("Order"), default=1)
 
     def __str__(self):
@@ -303,7 +303,7 @@ class AnswerChoice(BaseModel):
         null=True,
         blank=True,
     )
-    choice_text = models.TextField(_("Choice Text"), null=True, blank=True)
+    choice_text = HTMLField(_("Choice Text"), null=True, blank=True)
     choice_image = models.ImageField(
         _("Choice Image"), upload_to="questions/choices/", null=True, blank=True
     )

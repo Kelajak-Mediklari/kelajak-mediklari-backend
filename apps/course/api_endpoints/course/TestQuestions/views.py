@@ -33,20 +33,24 @@ class TestQuestionsAPIView(generics.ListAPIView):
         queryset = UserAnswer.objects.filter(user_test=user_test)
 
         if test_type == "matching":
-            queryset = queryset.select_related("question").prefetch_related(
+            queryset = queryset.select_related(
+                "question", "question__test"
+            ).prefetch_related(
                 Prefetch(
                     "question__matching_pairs",
                     queryset=MatchingPair.objects.order_by("order"),
                 )
             )
         elif test_type == "regular_test":
-            queryset = queryset.select_related("question").prefetch_related(
+            queryset = queryset.select_related(
+                "question", "question__test"
+            ).prefetch_related(
                 Prefetch(
                     "question__choices", queryset=AnswerChoice.objects.order_by("order")
                 )
             )
         else:
-            queryset = queryset.select_related("question")
+            queryset = queryset.select_related("question", "question__test")
 
         return queryset.order_by("question__order")
 

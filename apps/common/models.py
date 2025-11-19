@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from ckeditor_uploader.fields import RichTextUploadingField
+from tinymce.models import HTMLField
 
 
 class BaseModel(models.Model):
@@ -74,7 +74,7 @@ class UsefulLinkFile(BaseModel):
 class UsefulLink(BaseModel):
     title = models.CharField(_("Title"), max_length=255)
     slug = models.SlugField(_("Slug"), unique=True, blank=True)
-    description = RichTextUploadingField(_("Description"))
+    description = HTMLField(_("Description"))
     category = models.ForeignKey(UsefulLinkCategory, on_delete=models.CASCADE, related_name="links")
     subject = models.ForeignKey(UsefulLinkSubject, on_delete=models.CASCADE, related_name="links")
     cover_image = models.ImageField(_("Cover Image"), upload_to="useful_links/", null=True, blank=True)

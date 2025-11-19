@@ -118,10 +118,10 @@ class TestStartAPIView(generics.CreateAPIView):
 
     def _generate_user_answers(self, user_test, test):
         """Generate UserAnswer objects with random questions for the test"""
-        # Get all questions for this test
-        all_questions = Question.objects.filter(test=test, is_active=True).order_by(
-            "order"
-        )
+        # Get all questions for this test with test relationship preloaded
+        all_questions = Question.objects.filter(
+            test=test, is_active=True
+        ).select_related("test").order_by("order")
 
         questions_count = test.questions_count
         total_available = all_questions.count()

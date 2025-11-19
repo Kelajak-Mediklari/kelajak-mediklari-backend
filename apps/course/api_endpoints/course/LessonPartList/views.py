@@ -21,7 +21,7 @@ class LessonPartListAPIView(generics.ListAPIView):
 
         queryset = (
             LessonPart.objects.filter(lesson=lesson, is_active=True)
-            .select_related("test", "lesson__course")
+            .select_related("test")
             .prefetch_related("test__user_tests")
             .order_by("order")
         )
