@@ -76,8 +76,10 @@ class LoginView(generics.GenericAPIView):
                 else None,
                 "coin": user.coin,
                 "point": user.point,
+                "role": user.role
             },
             "created": False,
+            
         }
 
         # Update last login
