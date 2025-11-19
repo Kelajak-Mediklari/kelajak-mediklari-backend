@@ -1,6 +1,14 @@
 from django.contrib import admin
+from django.contrib.auth.hashers import identify_hasher, make_password
 
-from apps.users.models import User, UserDevice, Group, GroupMember, GroupMemberGrade, TeacherGlobalLimit
+from apps.users.models import (
+    Group,
+    GroupMember,
+    GroupMemberGrade,
+    TeacherGlobalLimit,
+    User,
+    UserDevice,
+)
 
 
 @admin.register(User)
@@ -16,6 +24,26 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ("phone", "full_name", "email", "username")
     list_filter = ("role", "is_active", "is_deleted")
     ordering = ("created_at",)
+
+    def save_model(self, request, obj, form, change):
+        """
+        Ensure that passwords entered via the admin UI are hashed before saving.
+
+        If the password value already looks like a hashed password (Django can
+        identify the hasher), we leave it as-is. Otherwise we hash it.
+        """
+        password = form.cleaned_data.get("password")
+
+        if password and (not obj.pk or password != obj.password):
+            try:
+                identify_hasher(password)
+                hashed_password = password
+            except ValueError:
+                hashed_password = make_password(password)
+
+            obj.password = hashed_password
+
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(UserDevice)
