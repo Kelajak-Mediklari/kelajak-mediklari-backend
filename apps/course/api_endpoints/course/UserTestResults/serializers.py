@@ -1,19 +1,65 @@
 from rest_framework import serializers
 
-from apps.course.models import Question, UserAnswer, UserTest
+from apps.course.models import AnswerChoice, Question, UserAnswer, UserTest
+
+
+class AnswerChoiceResultSerializer(serializers.ModelSerializer):
+    """Serializer for answer choices with result information"""
+
+    is_user_selected = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AnswerChoice
+        fields = (
+            "id",
+            "choice_text",
+            "choice_image",
+            "choice_label",
+            "is_correct",
+            "is_user_selected",
+            "order",
+        )
+
+    def get_is_user_selected(self, obj):
+        """Check if this choice was selected by the user"""
+        user_test = self.context.get("user_test")
+        question = self.context.get("question")
+
+        if not user_test or not question:
+            return False
+
+        try:
+            user_answer = UserAnswer.objects.get(user_test=user_test, question=question)
+            return (
+                user_answer.selected_choice_id == obj.id
+                if user_answer.selected_choice
+                else False
+            )
+        except UserAnswer.DoesNotExist:
+            return False
 
 
 class QuestionResultSerializer(serializers.ModelSerializer):
     """Serializer for individual question results in user test"""
 
     user_answer_status = serializers.SerializerMethodField()
+    choices = serializers.SerializerMethodField()
+    question_type = serializers.CharField(
+        source="regular_question_type", read_only=True
+    )
+    user_selected_choice_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
         fields = (
             "id",
             "question_text",
+            "question_image",
+            "video_url",
+            "question_type",
             "user_answer_status",
+            "choices",
+            "user_selected_choice_id",
         )
 
     def get_user_answer_status(self, obj):
@@ -27,6 +73,32 @@ class QuestionResultSerializer(serializers.ModelSerializer):
             return "correct" if user_answer.is_correct else "incorrect"
         except UserAnswer.DoesNotExist:
             return "not_answered"
+
+    def get_choices(self, obj):
+        """Get all answer choices with information about correctness and user selection"""
+        choices = obj.choices.all().order_by("order")
+        return AnswerChoiceResultSerializer(
+            choices,
+            many=True,
+            context={
+                "user_test": self.context.get("user_test"),
+                "question": obj,
+            },
+        ).data
+
+    def get_user_selected_choice_id(self, obj):
+        """Get the ID of the choice selected by the user"""
+        user_test = self.context.get("user_test")
+        if not user_test:
+            return None
+
+        try:
+            user_answer = UserAnswer.objects.get(user_test=user_test, question=obj)
+            return (
+                user_answer.selected_choice_id if user_answer.selected_choice else None
+            )
+        except UserAnswer.DoesNotExist:
+            return None
 
 
 class UserTestResultsSerializer(serializers.ModelSerializer):
