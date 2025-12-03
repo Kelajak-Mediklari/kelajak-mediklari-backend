@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
-
+from django.core.exceptions import ValidationError
 from apps.common.models import BaseModel
 from apps.users.managers import SoftDeleteUserManager
 
@@ -220,6 +220,34 @@ class Group(BaseModel):
     def __str__(self):
         return f"{self.name} - {self.course.title}"
 
+    def clean(self):
+        """Validate that max_member_count doesn't exceed teacher's remaining global limit"""
+        super().clean()
+        # Get teacher_id and course_id - these are set by the form before clean() is called
+        teacher_id = getattr(self, 'teacher_id', None)
+        course_id = getattr(self, 'course_id', None)
+
+        # Only validate if both teacher and course are set
+        if not teacher_id or not course_id:
+            # Teacher or course not set yet, skip validation
+            return
+
+        try:
+            teacher_limit = TeacherGlobalLimit.objects.get(
+                teacher_id=teacher_id,
+                course_id=course_id
+            )
+            if self.max_member_count > teacher_limit.remaining:
+                raise ValidationError(
+                    _("You do not have remaining limit for this course. "
+                      f"Requested: {self.max_member_count}, Available: {teacher_limit.remaining}. "
+                      "Please purchase more.")
+                )
+        except TeacherGlobalLimit.DoesNotExist:
+            raise ValidationError(
+                _("You do not have access to this course. Please purchase the course first.")
+            )
+
 
 class GroupMember(BaseModel):
     group = models.ForeignKey("users.Group", on_delete=models.CASCADE, verbose_name=_("Group"), related_name="members")
@@ -232,7 +260,67 @@ class GroupMember(BaseModel):
         verbose_name_plural = _("Group members")
 
     def __str__(self):
-        return f"{self.group.name} - {self.user.username}"
+        try:
+            username = self.user.username if hasattr(self, 'user_id') and self.user_id else "No User"
+        except (User.DoesNotExist, Exception):
+            username = "No User"
+        group_name = self.group.name if self.group else "No Group"
+        return f"{group_name} - {username}"
+
+    def clean(self):
+        """Validate that adding this member won't exceed group capacity or teacher's global limit"""
+        super().clean()
+        # Safely check if user exists
+        user = None
+        if hasattr(self, 'user_id') and self.user_id:
+            try:
+                user = self.user
+            except (User.DoesNotExist, Exception):
+                # User doesn't exist or related object doesn't exist
+                user = None
+
+        if self.group and user:
+            # Check if user is already in another group with the same course
+            if self.group.course:
+                existing_member = GroupMember.objects.filter(
+                    user=user,
+                    group__course=self.group.course,
+                    is_active=True
+                ).exclude(pk=self.pk if self.pk else None).first()
+
+                if existing_member:
+                    raise ValidationError(
+                        _("User %(user)s is already a member of group '%(group)s' for course '%(course)s'. "
+                          "A user can only be in one group per course.") % {
+                            'user': user.full_name or str(user.phone),
+                            'group': existing_member.group.name,
+                            'course': self.group.course.title
+                        }
+                    )
+
+            # Check if group is full
+            if self.group.current_member_count >= self.group.max_member_count:
+                raise ValidationError(
+                    _("This group is full. No more members can be added.")
+                )
+
+            # Check teacher's global limit
+            if self.group.teacher and self.group.course:
+                try:
+                    teacher_limit = TeacherGlobalLimit.objects.get(
+                        teacher=self.group.teacher,
+                        course=self.group.course
+                    )
+                    if teacher_limit.remaining <= 0:
+                        raise ValidationError(
+                            _("Teacher has reached the global limit for this course. "
+                              f"Limit: {teacher_limit.limit}, Used: {teacher_limit.used}, "
+                              "Remaining: 0. Please purchase more.")
+                        )
+                except TeacherGlobalLimit.DoesNotExist:
+                    raise ValidationError(
+                        _("Teacher does not have access to this course. Please set up the teacher's global limit first.")
+                    )
 
 
 class TeacherGlobalLimit(BaseModel):
@@ -266,3 +354,21 @@ class GroupMemberGrade(BaseModel):
 
     def __str__(self):
         return f"{self.group_member.user.username} - {self.lesson.title}"
+
+
+class KMTeacher(BaseModel):
+    class TeacherType(models.TextChoices):
+        CHEMISTRY = "CHEMISTRY", _("Kimyo")
+        BIOLOGY = "BIOLOGY", _("Biologiya")
+
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, verbose_name=_("User"))
+    km_id = models.CharField(max_length=20, unique=True, null=True)
+    is_repetitor = models.BooleanField(default=False)
+    teacher_type = models.CharField(max_length=20, choices=TeacherType.choices, default=TeacherType.CHEMISTRY)
+
+    def __str__(self):
+        return f"{self.km_id}"
+
+    class Meta:
+        verbose_name = _("KM Teacher")
+        verbose_name_plural = _("KM Teachers")

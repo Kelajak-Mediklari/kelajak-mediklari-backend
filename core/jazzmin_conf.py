@@ -77,6 +77,7 @@ JAZZMIN_SETTINGS = {
         "common.district": "fas fa-map-pin",
         # Users models
         "users.user": "fas fa-user",
+        "users.KMTeacher": "fas fa-users",
         "users.userdevice": "fas fa-mobile-alt",
         # Course models
         "course.roadmap": "fas fa-map",

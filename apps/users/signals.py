@@ -22,36 +22,69 @@ def calculate_group_end_date(sender, instance, created, **kwargs):
 def update_teacher_global_limit(sender, instance, created, **kwargs):
     """
     Update teacher global limit when a group member is added
+    Check if teacher has remaining limit before proceeding
+    Only assign teacher and create UserCourse if limit is available
     """
     if created and instance.is_active:
         group = instance.group
         teacher = group.teacher
         course = group.course
 
+        if not teacher or not course:
+            return
+
         try:
-            # create student course
-
-            UserCourse.objects.create(
-                user=instance.user,
-                course=course,
-                finish_date=group.group_end_date,
-            )
-            # assigne teacher
-            if not instance.user.teacher:
-                instance.user.teacher = teacher
-                instance.user.save(update_fields=['teacher'])
-
             teacher_limit = TeacherGlobalLimit.objects.get(
                 teacher=teacher,
                 course=course
             )
-            # Increment used count
+
+            # Check if teacher has remaining limit BEFORE creating UserCourse and assigning teacher
+            if teacher_limit.remaining <= 0:
+                # No remaining limit - inform user but keep GroupMember
+                # Don't create UserCourse or assign teacher
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"GroupMember created but limit exceeded: Teacher {teacher.full_name} (ID: {teacher.id}) "
+                    f"has reached the limit ({teacher_limit.limit}) for course {course.title} (ID: {course.id}). "
+                    f"Remaining: {teacher_limit.remaining}. UserCourse not created and teacher not assigned."
+                )
+                # Keep GroupMember but don't proceed with UserCourse creation or teacher assignment
+                return
+
+            # Teacher has remaining limit - proceed with creation
+            # Create student course FIRST
+            UserCourse.objects.get_or_create(
+                user=instance.user,
+                course=course,
+                defaults={
+                    'finish_date': group.group_end_date,
+                }
+            )
+
+            # Assign teacher AFTER successful UserCourse creation
+            if not instance.user.teacher:
+                instance.user.teacher = teacher
+                instance.user.save(update_fields=['teacher'])
+
+            # Increment used count AFTER successful creation
             teacher_limit.used += 1
             # Update remaining count
             teacher_limit.remaining = teacher_limit.limit - teacher_limit.used
             teacher_limit.save(update_fields=['used', 'remaining'])
+
         except TeacherGlobalLimit.DoesNotExist:
-            pass  # Handle case where limit doesn't exist
+            # If limit doesn't exist, inform user but keep GroupMember
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"GroupMember created but no limit set: Teacher {teacher.full_name} (ID: {teacher.id}) "
+                f"does not have a limit set for course {course.title} (ID: {course.id}). "
+                "UserCourse not created and teacher not assigned. Please set up the teacher's global limit first."
+            )
+            # Keep GroupMember but don't proceed with UserCourse creation or teacher assignment
+            return
 
 
 @receiver(post_delete, sender=Group)
@@ -61,9 +94,36 @@ def delete_group_members(sender, instance, **kwargs):
     """
     GroupMember.objects.filter(group=instance).delete()
 
+
 @receiver(post_delete, sender=GroupMember)
 def delete_user_course(sender, instance, **kwargs):
     """
-    Delete user course when a group member is deleted
+    Delete user course and update teacher global limit when a group member is deleted
     """
-    UserCourse.objects.filter(user=instance.user, course=instance.group.course, is_expired=False).delete()
+    group = instance.group
+    teacher = group.teacher if group else None
+    course = group.course if group else None
+
+    if not group or not teacher or not course:
+        return
+
+    # Delete user course
+    UserCourse.objects.filter(user=instance.user, course=course, is_expired=False).delete()
+
+    # Decrement group's current_member_count if it was active
+    if instance.is_active and group.current_member_count > 0:
+        group.current_member_count -= 1
+        group.save(update_fields=['current_member_count'])
+
+    # Update teacher global limit - decrement used and increment remaining
+    try:
+        teacher_limit = TeacherGlobalLimit.objects.get(
+            teacher=teacher,
+            course=course
+        )
+        if teacher_limit.used > 0:
+            teacher_limit.used -= 1
+            teacher_limit.remaining = teacher_limit.limit - teacher_limit.used
+            teacher_limit.save(update_fields=['used', 'remaining'])
+    except TeacherGlobalLimit.DoesNotExist:
+        pass  # Handle case where limit doesn't exist
