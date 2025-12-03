@@ -96,27 +96,7 @@ class Command(BaseCommand):
 
                 formatted_phone = phone_clean
 
-                # Generate password
-                # Format: KM_ID + first letter of first name + first letter of last name + last two digits of phone
-                name_parts = full_name.strip().split()
-                if len(name_parts) < 2:
-                    self.stdout.write(self.style.WARNING(
-                        f"Row {row_idx}: Full name should have at least first and last name: {full_name}"))
-                    error_count += 1
-                    continue
-
-                first_name = name_parts[0]
-                last_name = name_parts[-1]
-
-                # Get first letter of first name and last name
-                first_letter_first = first_name[0].upper() if first_name else ''
-                first_letter_last = last_name[0].upper() if last_name else ''
-
-                # Get last two digits of phone (remove +998 and get last 2 digits)
-                phone_digits = phone_clean.replace('+998', '')
-                last_two_digits = phone_digits[-2:] if len(phone_digits) >= 2 else phone_digits
-
-                password = f"{km_id}{first_letter_first}{first_letter_last}{last_two_digits}"
+                password = km_id
 
                 # Check if user already exists
                 if User.objects.filter(phone=formatted_phone).exists():
